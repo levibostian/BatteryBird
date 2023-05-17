@@ -20,6 +20,7 @@
             android:name=".service.BluetoothDeviceMonitorBroadcastReceiver"
             android:exported="true">
             <!-- start when bluetooth devices connect and disconnect -->
+            <!-- Note: receiver must be exported for OS to call it from implicit intent events -->
             <intent-filter>
                 <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
                 <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />

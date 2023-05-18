@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             bluetoothAdapter.bondedDevices.forEach { bondedDevice ->
-                // uses systemapi function to get battery level. there is risk in using a non-public sdk function, however, logcat has not yet shown a warning from the android source code that the function is hidden and what alternative to use. Therefore, I think there is less risk involved in using at this time. Something to watch.
+                // using systemapi function to get battery level. there is risk in using a non-public sdk function, however, logcat has not yet shown a warning from the android source code that the function is hidden and what alternative to use. Therefore, I think there is less risk involved in using at this time. Something to watch.
                 val batteryLevel = bondedDevice.javaClass.getMethod("getBatteryLevel").invoke(bondedDevice) as Int
 
                 Logger.debug("device: ${bondedDevice.name}, battery level: ${batteryLevel}")

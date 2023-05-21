@@ -5,30 +5,31 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import earth.levi.app.DiGraph
+import earth.levi.app.android.bluetooth
 import earth.levi.app.log.Logger
+import earth.levi.app.log.logger
+import earth.levi.app.work.BluetoothDeviceBatteryCheckWorker
 
 class BluetoothDeviceMonitorBroadcastReceiver: BroadcastReceiver() {
 
+    private val log = DiGraph.instance.logger
+
     override fun onReceive(context: Context, intent: Intent) {
-        Logger.debug("bluetooth device monitor broadcast receiver onReceive")
+        log.debug("bluetooth device monitor broadcast receiver onReceive. action: ${intent.action}, extras: ${intent.extras.toString()}", this)
 
-        when (intent.action) {
-            "android.bluetooth.device.action.ACL_DISCONNECTED" -> {
-                // check if device is connected to any bluetooth devices that have a battery percentage attached (not a car). if no, stop service. we dont need it.
-            }
-            "android.bluetooth.device.action.ACL_CONNECTED" -> {
-                // Start long-running service monitoring bluetooth devices. checking the battery status every few minutes.
-            }
+        WorkManager.getInstance(context).apply {
+            val taskTag = BluetoothDeviceBatteryCheckWorker::class.java.simpleName
+
+            cancelAllWorkByTag(taskTag)
+
+            enqueue(OneTimeWorkRequestBuilder<BluetoothDeviceBatteryCheckWorker>()
+                .addTag(taskTag)
+                .build())
         }
-
-        // Get the bluetooth device from the intent
-        val bluetoothDevice: BluetoothDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.extras?.getParcelable("android.bluetooth.device.extra.DEVICE", BluetoothDevice::class.java)
-        } else {
-            intent.extras?.getParcelable("android.bluetooth.device.extra.DEVICE")
-        }
-
-        context.startService(Intent(context, BluetoothDeviceMonitorService::class.java))
     }
-
 }

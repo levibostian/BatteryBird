@@ -13,7 +13,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -21,11 +23,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
+import earth.levi.app.android.bluetooth
+import earth.levi.app.android.notifications
 import earth.levi.app.log.Logger
 import earth.levi.app.ui.theme.BluetoothBatteryAlertTheme
 
 class MainActivity : ComponentActivity() {
 
+    private val bluetooth = DiGraph.instance.bluetooth
+    private val notifications = DiGraph.instance.notifications
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,25 +42,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Android")
+                    Column {
+                        Greeting("Android")
+
+                        // required to get runtime permission in order to get broadcast receiver notifications if bluetooth device connected or not.
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            Button(onClick = {
+                                requestPermissions(arrayOf(bluetooth.getPairedDevicesPermission), 0)
+                            }) {
+                                Text(text = "bluetooth permission")
+                            }
+                        }
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            Button(onClick = {
+                                requestPermissions(arrayOf(notifications.showNotificationPermission), 1)
+                            }) {
+                                Text(text = "notification permission")
+                            }
+                        }
+                    }
                 }
-            }
-        }
-
-        // required to get runtime permission in order to get broadcast receiver notifications if bluetooth device connected or not.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), 0)
-        }
-
-        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = bluetoothManager.adapter
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-            bluetoothAdapter.bondedDevices.forEach { bondedDevice ->
-                // using systemapi function to get battery level. there is risk in using a non-public sdk function, however, logcat has not yet shown a warning from the android source code that the function is hidden and what alternative to use. Therefore, I think there is less risk involved in using at this time. Something to watch.
-                val batteryLevel = bondedDevice.javaClass.getMethod("getBatteryLevel").invoke(bondedDevice) as Int
-
-                Logger.debug("device: ${bondedDevice.name}, battery level: ${batteryLevel}")
             }
         }
     }

@@ -2,7 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- required to receive ACL_CONNECTED broadcast when bluetooth device connected -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <!-- to show notifications on device -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
+        android:name=".MainApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -11,6 +19,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BluetoothBatteryAlert"
         tools:targetApi="31">
+
+        <service android:name=".android.DismissNotificationService" android:exported="false" />
+
+        <receiver
+            android:name=".service.BluetoothDeviceMonitorBroadcastReceiver"
+            android:exported="true">
+            <!-- start when bluetooth devices connect and disconnect -->
+            <!-- Note: receiver must be exported for OS to call it from implicit intent events -->
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -18,7 +40,6 @@
             android:theme="@style/Theme.BluetoothBatteryAlert">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

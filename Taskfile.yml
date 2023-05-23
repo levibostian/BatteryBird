@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  update-lock-versions:
+    cmds:
+      - ./gradlew :app:dependencies --write-locks
+      - ./gradlew dependencies --write-locks

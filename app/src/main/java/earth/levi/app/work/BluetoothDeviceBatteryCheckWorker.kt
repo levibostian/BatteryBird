@@ -2,19 +2,16 @@ package earth.levi.app.work
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import earth.levi.app.DiGraph
-import earth.levi.app.R
-import earth.levi.app.android.Notifications
 import earth.levi.app.android.batteryLevel
 import earth.levi.app.android.bluetooth
+import earth.levi.app.android.bluetoothDeviceMonitoringNotifications
 import earth.levi.app.android.id
 import earth.levi.app.android.notifications
-import earth.levi.app.android.show
 import earth.levi.app.extensions.secondsToMillis
 import earth.levi.app.log.logger
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +22,7 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
     private val bluetooth = DiGraph.instance.bluetooth
     private val log = DiGraph.instance.logger
     private val notifications = DiGraph.instance.notifications
+    private val bluetoothDeviceMonitoringNotifications = DiGraph.instance.bluetoothDeviceMonitoringNotifications
 
     override suspend fun doWork(): Result {
         // This worker is a long-running worker that runs X number of minutes while the bluetooth device is connected.
@@ -51,21 +49,27 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
             atLeastOneBluetoothDeviceConnected = false // changes to true if a device found to be paired
 
             withContext(Dispatchers.IO) {
-                val pairedDevices = bluetooth.getPairedDevices(applicationContext)
+                val pairedDevices = bluetooth.getPairedDevices(applicationContext) // paired doesn't mean they are connected! Get battery level to verify they are connected
+                val connectedDevicesWithBatteryLevel = pairedDevices.mapNotNull { pairedDevice ->
+                    val batteryLevelOfDevice = pairedDevice.batteryLevel ?: return@mapNotNull null
+                    Pair(pairedDevice, batteryLevelOfDevice)
+                }
 
-                pairedDevices.forEach { pairedDevice ->
-                    pairedDevice.batteryLevel?.let { batteryLevelOfDevice ->
-                        atLeastOneBluetoothDeviceConnected = true // if there is a battery level read, we can assume the device is connected
+                bluetoothDeviceMonitoringNotifications.updateDevicesMonitoredNotifications(applicationContext, connectedDevicesWithBatteryLevel)
 
-                        log.debug("device: ${pairedDevice.name}, battery: $batteryLevelOfDevice", this)
+                connectedDevicesWithBatteryLevel.forEach { connectedDeviceWithBatteryLevel ->
+                    val connectedDevice = connectedDeviceWithBatteryLevel.first
+                    val batteryLevelOfDevice = connectedDeviceWithBatteryLevel.second
+                    atLeastOneBluetoothDeviceConnected = true // if there is a battery level read, we can assume the device is connected
 
-                        if (batteryLevelOfDevice <= 20) {
-                            notifications.getBatteryLowNotification(applicationContext, pairedDevice.name, batteryLevelOfDevice).show(notifications)
-                        }
+                    log.debug("device: ${connectedDevice.name}, battery: $batteryLevelOfDevice", this)
+
+                    if (batteryLevelOfDevice <= 20) {
+                        notifications.getBatteryLowNotification(applicationContext, connectedDevice.name, batteryLevelOfDevice, show = true)
                     }
                 }
 
-                Thread.sleep(5.secondsToMillis())
+                Thread.sleep(10.secondsToMillis())
             }
         }
     }

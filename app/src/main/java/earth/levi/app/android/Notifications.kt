@@ -19,27 +19,43 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import earth.levi.app.DiGraph
 import earth.levi.app.R
+import earth.levi.app.store.KeyValueStorage
+import earth.levi.app.store.NotificationsStore
+import earth.levi.app.store.keyValueStorage
+import earth.levi.app.store.notificationsStore
+import kotlinx.serialization.Serializable
 
 val DiGraph.notifications: Notifications
-    get() = Notifications(notificationManager)
+    get() = Notifications(notificationManager, notificationsStore)
 
-class Notifications(private val notificationManager: NotificationManager) {
+open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore) {
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     val showNotificationPermission = Manifest.permission.POST_NOTIFICATIONS
 
     fun showNotification(notification: Notification) {
+        val notificationId = notification.id
         val notificationTag = notification.tag
 
         if (notificationTag != null) {
-            notificationManager.notify(notificationTag, notification.id, notification)
+            notificationManager.notify(notificationTag, notificationId, notification)
         } else {
-            notificationManager.notify(notification.id, notification)
+            notificationManager.notify(notificationId, notification)
         }
+
+        notificationsStore.notificationShown(ShownNotification(notificationId, notificationTag))
+    }
+
+    val shownNotifications: List<ShownNotification>
+        get() = notificationsStore.notificationsShown
+
+    fun cancel(shownNotification: ShownNotification) {
+        this.cancel(shownNotification.id, shownNotification.tag)
     }
 
     fun cancel(notificationId: Int, notificationTag: String?) {
         notificationManager.cancel(notificationTag, notificationId)
+        notificationsStore.removeNotificationShown(ShownNotification(notificationId, notificationTag))
     }
 
     @SuppressLint("NewApi") // because notification channels returns null if OS level too low, we can ignore lint error
@@ -52,27 +68,46 @@ class Notifications(private val notificationManager: NotificationManager) {
         }
     }
 
-    fun getBatteryMonitoringNotification(context: Context, cancelIntent: PendingIntent) = NotificationCompat.Builder(context).apply {
+    fun getBatteryMonitoringNotification(context: Context, cancelIntent: PendingIntent, show: Boolean = false) = NotificationCompat.Builder(context).apply {
         Channels.BackgroundUpdatesDeviceBatteryLevels.channelId?.let { setChannelId(it) }
-        setContentTitle("Monitoring battery levels")
+        setContentTitle("Monitoring battery levels...")
         setSmallIcon(R.drawable.ic_launcher_foreground)
+        setGroup(Groups.DevicesBeingMonitored.name)
+        setSortKey("aaaaaaa") // we want this notification to be displayed on top of group so set sort key to something that can't be beat lexicographically
         setOngoing(true)
-        setId(0)
+        setId(Groups.DevicesBeingMonitored.ordinal)
         // Add the cancel action to the notification which can be used to cancel the worker
         addAction(android.R.drawable.ic_delete, "cancel", cancelIntent)
-    }.build()
+    }.build(showAfterBuild = show)
 
-    fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int) = NotificationCompat.Builder(context).apply {
+    fun getDeviceBatteryMonitoringNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = NotificationCompat.Builder(context).apply {
+        Channels.BackgroundUpdatesDeviceBatteryLevels.channelId?.let { setChannelId(it) }
+        setContentTitle("$deviceName battery being monitored...")
+        setContentText("Current battery: $batteryPercentage%")
+        setSmallIcon(R.drawable.ic_launcher_foreground)
+        setGroup(Groups.DevicesBeingMonitored.name)
+        setOngoing(true)
+        setId(Groups.DevicesBeingMonitored.ordinal)
+        setTag(deviceName)
+    }.build(showAfterBuild = show)
+
+    fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = NotificationCompat.Builder(context).apply {
         Channels.LowBattery.channelId?.let { setChannelId(it) }
         setContentTitle("Bluetooth device battery low")
         setContentText("$deviceName battery level $batteryPercentage%")
         setOngoing(true) // do not allow swiping away to accidentally swipe it. instead, we add a button to dismiss it.
         setOnlyAlertOnce(true) // only play sound once. if notification gets updated later, update content but no alert
-        setId(1)
+        setGroup(Groups.LowBatteryDevices.name)
+        setId(Groups.LowBatteryDevices.ordinal)
         setTag(deviceName)
         setSmallIcon(R.drawable.ic_launcher_foreground)
         addAction(android.R.drawable.ic_delete, "done", DismissNotificationService.getPendingIntent(context, id, tag))
-    }.build()
+    }.build(showAfterBuild = show)
+
+    enum class Groups { // You can group notifications together in tray that are related.
+        LowBatteryDevices,
+        DevicesBeingMonitored;
+    }
 
     enum class Channels {
         LowBattery,
@@ -122,11 +157,16 @@ class Notifications(private val notificationManager: NotificationManager) {
                 }
         }
     }
+
+    fun NotificationCompat.Builder.build(showAfterBuild: Boolean): Notification {
+        return build().also { notification ->
+            if (showAfterBuild) this@Notifications.showNotification(notification)
+        }
+    }
 }
 
-fun Notification.show(notifications: Notifications) {
-    notifications.showNotification(this)
-}
+@Serializable
+data class ShownNotification(val id: Int, val tag: String?)
 
 fun NotificationCompat.Builder.setId(value: Int) {
     addExtras(Bundle().apply { putInt("id", value) })

@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -42,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.7"
@@ -69,6 +71,9 @@ dependencies {
     
     // WorkManager 
     implementation("androidx.work:work-runtime-ktx:[2.8,)")
+
+    // Kotlinx
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:[1.5,)")
 
     // junit, espresso
     testImplementation("junit:junit:[4.13,)")

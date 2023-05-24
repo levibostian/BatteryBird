@@ -27,7 +27,7 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
     override suspend fun doWork(): Result {
         // This worker is a long-running worker that runs X number of minutes while the bluetooth device is connected.
         // You call setForeground() to tell WorkManager that you are a long-running task.
-        val notificationForLongRunningJob = notifications.getBatteryMonitoringNotification(applicationContext, WorkManager.getInstance(applicationContext).createCancelPendingIntent(id))
+        val notificationForLongRunningJob = notifications.getBatteryMonitoringNotification(applicationContext)
         setForeground(ForegroundInfo(notificationForLongRunningJob.id, notificationForLongRunningJob))
 
         // Now we can begin the work!

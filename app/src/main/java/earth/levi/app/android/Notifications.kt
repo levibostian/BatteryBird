@@ -68,7 +68,7 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         }
     }
 
-    fun getBatteryMonitoringNotification(context: Context, cancelIntent: PendingIntent, show: Boolean = false) = NotificationCompat.Builder(context).apply {
+    fun getBatteryMonitoringNotification(context: Context, show: Boolean = false) = NotificationCompat.Builder(context).apply {
         Channels.BackgroundUpdatesDeviceBatteryLevels.channelId?.let { setChannelId(it) }
         setContentTitle("Monitoring battery levels...")
         setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -76,8 +76,6 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         setSortKey("aaaaaaa") // we want this notification to be displayed on top of group so set sort key to something that can't be beat lexicographically
         setOngoing(true)
         setId(Groups.DevicesBeingMonitored.ordinal)
-        // Add the cancel action to the notification which can be used to cancel the worker
-        addAction(android.R.drawable.ic_delete, "cancel", cancelIntent)
     }.build(showAfterBuild = show)
 
     fun getDeviceBatteryMonitoringNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = NotificationCompat.Builder(context).apply {

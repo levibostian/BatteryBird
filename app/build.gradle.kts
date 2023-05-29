@@ -35,6 +35,11 @@ android {
         }
     }
     compileOptions {
+        // desugaring required by kotlinx datetime because android SDK version is lower then 26
+        // https://github.com/Kotlin/kotlinx-datetime#using-in-your-projects
+        // https://developer.android.com/studio/write/java8-support#library-desugaring
+        isCoreLibraryDesugaringEnabled = true
+
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -72,6 +77,9 @@ dependencies {
     //implementation("androidx.activity:activity-compose:1.6.1")
     // Compose: Optional - Integration with ViewModels
     // implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
+
+    // Kotlin datetime util
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:[0.4.0,)")
 
     implementation("androidx.core:core-ktx:[1.7,)")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")

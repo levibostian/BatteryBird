@@ -80,7 +80,12 @@ dependencies {
 
     // Kotlin datetime util
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:[0.4.0,)")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:[2.0.3,)")
 
+    // Coroutine support for Shared Prefs
+    implementation("com.fredporciuncula:flow-preferences:[1.9.1,)")
+
+    // AndroidX
     implementation("androidx.core:core-ktx:[1.7,)")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
     implementation("androidx.activity:activity-compose:[1.7,)")

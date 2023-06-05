@@ -49,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -68,7 +69,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import earth.levi.app.extensions.now
+import earth.levi.app.extensions.supportEmailIntent
+import earth.levi.app.extensions.systemBluetoothSettingsIntent
 import earth.levi.app.extensions.toRelativeTimeSpanString
 import earth.levi.app.model.BluetoothDevice
 import earth.levi.app.model.BluetoothDeviceDemo
@@ -79,6 +83,10 @@ import earth.levi.app.ui.theme.BatteryLevelLow
 import earth.levi.app.ui.theme.BatteryLevelMedium
 import earth.levi.app.ui.theme.BatteryLevelTrackDark
 import earth.levi.app.ui.theme.BatteryLevelTrackLight
+import earth.levi.app.viewmodel.BluetoothDevicesViewModel
+import earth.levi.app.viewmodel.bluetoothDevicesViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
@@ -87,16 +95,20 @@ import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
 
-    private val bluetooth = DiGraph.instance.bluetooth
-    private val notifications = DiGraph.instance.notifications
+    private val bluetoothDevicesViewModel by viewModelDiGraph { DiGraph.instance.bluetoothDevicesViewModel }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-            // TODO: viewmodel observing bluetooth devices from storage. also viewmodel can provide demo devies 
-            MainActivityScreen(bluetoothDevices = emptyList(), toolbarBluetoothSettingsOnClick = {
-                // TODO: open OS system wide setings bluetooth
+            MainActivityComposable(bluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick = {
+                startActivity(systemBluetoothSettingsIntent())
+            }, contactUsOnClick = {
+                startActivity(supportEmailIntent())
             })
+
+            // TODO: show a CTA view for bluetooth permission
+            // TODO: show a CTA view for notification permissione
         }
     }
 
@@ -117,12 +129,26 @@ class MainActivity : ComponentActivity() {
 //            }
 }
 
+@Composable
+fun MainActivityComposable(bluetoothDevicesViewModel: BluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit) {
+    val bluetoothDevices = bluetoothDevicesViewModel.observePairedDevices.collectAsState()
+
+    MainActivityScreen(
+        bluetoothDevices = bluetoothDevices.value,
+        toolbarBluetoothSettingsOnClick,
+        contactUsOnClick
+    )
+}
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainActivityScreen(bluetoothDevices: List<BluetoothDevice>, toolbarBluetoothSettingsOnClick: () -> Unit) {
+fun MainActivityScreen(bluetoothDevices: List<BluetoothDevice>, toolbarBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit) {
     AppTheme {
         Scaffold(
-            topBar = { BluetoothDevicesTopAppBar(systemBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick) }
+            topBar = { BluetoothDevicesTopAppBar(
+                systemBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick,
+                contactUsOnClick = contactUsOnClick)
+            }
         ) { contentPadding ->
             Column(Modifier.padding(top = contentPadding.calculateTopPadding())) {
                 LazyColumn {
@@ -136,7 +162,9 @@ fun MainActivityScreen(bluetoothDevices: List<BluetoothDevice>, toolbarBluetooth
                             Column {
                                 Row {
                                     Text(text = it.name)
-                                    IsDemoView(isDemo = it.isDemo, modifier = Modifier.align(Alignment.CenterVertically).padding(start = 6.dp))
+                                    IsDemoView(isDemo = it.isDemo, modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .padding(start = 6.dp))
                                 }
 
                                 DeviceLastConnectedText(it.lastTimeConnected)
@@ -193,48 +221,38 @@ fun BluetoothBatteryProgressBar(batteryLevel: Int, modifier: Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BluetoothDevicesTopAppBar(systemBluetoothSettingsOnClick: () -> Unit) {
+fun BluetoothDevicesTopAppBar(systemBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit) {
     var menuExpanded by remember { mutableStateOf(false) }
 
     TopAppBar(
         title = { Text("Devices") },
         actions = {
-            IconButton(onClick = systemBluetoothSettingsOnClick) {
-                Icon(
-                    imageVector = Icons.Default.Favorite, // TODO: change to real icon
-                    contentDescription = "Go to system bluetooth settings"
-                )
-            }
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Localized description")
+                    Icon(Icons.Default.MoreVert, contentDescription = "open menu")
                 }
-                MiscMenuOptionsDropdown(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }, contactUsOnClick = { /*TODO*/ })
+                MiscMenuOptionsDropdown(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }, systemBluetoothSettingsOnClick = systemBluetoothSettingsOnClick, contactUsOnClick = contactUsOnClick)
             }
         }
     )
 }
 
 @Composable
-fun MiscMenuOptionsDropdown(expanded: Boolean, onDismissRequest: () -> Unit, contactUsOnClick: () -> Unit) {
+fun MiscMenuOptionsDropdown(expanded: Boolean, onDismissRequest: () -> Unit, systemBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit) {
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
     ) {
+        DropdownMenuItem(text = { Text("System Bluetooth Settings") }, onClick = systemBluetoothSettingsOnClick)
         DropdownMenuItem(text = { Text("Contact Us") }, onClick = contactUsOnClick)
     }
 }
 
 @Composable
 @Preview(device = "id:pixel_5")
-fun MainActivityScreenPhonePreview() {
-    MainActivityScreen(bluetoothDevices = Samples.bluetoothDevices) {}
-}
-
-@Composable
 @Preview(device = "id:pixel_5",
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
-fun MainActivityScreenPhonePreviewDarkMode() {
-    MainActivityScreen(bluetoothDevices = Samples.bluetoothDevices) {}
+fun MainActivityScreenPhonePreview() {
+    MainActivityScreen(bluetoothDevices = Samples.bluetoothDevices, {}) {}
 }

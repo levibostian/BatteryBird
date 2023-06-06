@@ -7,6 +7,7 @@ import earth.levi.app.android.ShownNotification
 import earth.levi.app.extensions.toJsonString
 import earth.levi.app.extensions.toObjectFromJsonString
 import earth.levi.app.model.BluetoothDevice
+import earth.levi.app.model.BluetoothDeviceModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
@@ -26,13 +27,13 @@ open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
     private val flowSharedPreferences: FlowSharedPreferences
         get() = FlowSharedPreferences(sharedPreferences)
 
-    var pairedBluetoothDevices: List<BluetoothDevice>
+    var pairedBluetoothDevices: List<BluetoothDeviceModel>
         set(newValue) {
             sharedPreferences.edit().putJson(Keys.PairedBluetoothDevices.name, newValue).commit()
         }
         get() = sharedPreferences.getFromJson(Keys.PairedBluetoothDevices.name) ?: emptyList()
 
-    val observePairedBluetoothDevices: Flow<List<BluetoothDevice>>
+    val observePairedBluetoothDevices: Flow<List<BluetoothDeviceModel>>
         get() = flowSharedPreferences.getString(Keys.PairedBluetoothDevices.name, "").asFlow()
             .map { string ->
                 if (string.isBlank()) emptyList() else string.toObjectFromJsonString()

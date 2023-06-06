@@ -1,6 +1,7 @@
 package earth.levi.app.model
 
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 import java.util.Date
 
 interface BluetoothDevice {
@@ -12,6 +13,7 @@ interface BluetoothDevice {
 }
 
 // Used in data store
+@Serializable
 data class BluetoothDeviceModel(
     override val hardwareAddress: String,
     override val name: String,

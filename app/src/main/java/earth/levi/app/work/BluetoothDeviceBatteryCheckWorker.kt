@@ -31,7 +31,15 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
     private val bluetoothDeviceMonitoringNotifications = DiGraph.instance.bluetoothDeviceMonitoringNotifications
     private val bluetoothDevicesStore = DiGraph.instance.bluetoothDevicesStore
 
+    // paired doesn't mean they are connected! Get battery level to verify they are connected
+    private val pairedAndroidBluetoothDevices: List<android.bluetooth.BluetoothDevice>
+        get() = bluetooth.getPairedDevices(applicationContext)
+
     override suspend fun doWork(): Result {
+        // don't run worker if there are no devices currently connected.
+        // this check allows us to run this worker many times even if we think there might not be any devices connected and it will not show a notification in the UI and annoy the user.
+        if (pairedAndroidBluetoothDevices.isEmpty()) return Result.success()
+
         // This worker is a long-running worker that runs X number of minutes while the bluetooth device is connected.
         // You call setForeground() to tell WorkManager that you are a long-running task.
         val notificationForLongRunningJob = notifications.getBatteryMonitoringNotification(applicationContext)
@@ -56,7 +64,6 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
             atLeastOneBluetoothDeviceConnected = false // changes to true if a device found to be paired
 
             withContext(Dispatchers.IO) {
-                val pairedAndroidBluetoothDevices = bluetooth.getPairedDevices(applicationContext) // paired doesn't mean they are connected! Get battery level to verify they are connected
                 val pairedBluetoothDevices = pairedAndroidBluetoothDevices.mapNotNull { pairedDevice ->
                     val batteryLevelOfDevice = pairedDevice.batteryLevel ?: return@mapNotNull null // if Android OS doesn't give a battery level, we don't care about that device. Ignore it.
 

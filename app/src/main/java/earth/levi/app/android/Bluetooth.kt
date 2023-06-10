@@ -25,16 +25,9 @@ val DiGraph.bluetooth: Bluetooth
 
 class Bluetooth(private val systemBluetoothAdapter: BluetoothAdapter): AndroidFeature() {
 
-    // TODO: now that I have AndroidFeature which is a handy way to check API level of the feature AND if permission has been granted, refactor this class to remove
-    // all of the "if SDK level ..." checks and annotations.
-
-    val getPairedDevicesPermission = Manifest.permission.BLUETOOTH_CONNECT
-
+    @SuppressLint("MissingPermission") // we check if permission granted inside of the function.
     fun getPairedDevices(context: Context): List<BluetoothDevice> {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val havePermissionToGetSystemBluetoothDevices = ContextCompat.checkSelfPermission(context, getPairedDevicesPermission) == PackageManager.PERMISSION_GRANTED
-            if (!havePermissionToGetSystemBluetoothDevices) return emptyList()
-        }
+        if (!isPermissionGranted(RuntimePermission.Bluetooth, context)) return emptyList()
 
         return systemBluetoothAdapter.bondedDevices.toList()
     }

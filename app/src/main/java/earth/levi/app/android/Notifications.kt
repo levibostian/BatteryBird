@@ -33,9 +33,6 @@ open class Notifications(val notificationManager: NotificationManager, val notif
 
     override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Notifications)
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    val showNotificationPermission = Manifest.permission.POST_NOTIFICATIONS
-
     fun showNotification(notification: Notification) {
         val notificationId = notification.id
         val notificationTag = notification.tag
@@ -71,8 +68,7 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         }
     }
 
-    fun getBatteryMonitoringNotification(context: Context, show: Boolean = false) = NotificationCompat.Builder(context).apply {
-        Channels.BackgroundUpdatesDeviceBatteryLevels.channelId?.let { setChannelId(it) }
+    fun getBatteryMonitoringNotification(context: Context, show: Boolean = false) = getNotificationBuilder(context, Channels.BackgroundUpdatesDeviceBatteryLevels).apply {
         setContentTitle("Monitoring battery levels...")
         setSmallIcon(R.drawable.ic_launcher_foreground)
         setGroup(Groups.DevicesBeingMonitored.name)
@@ -81,8 +77,7 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         setId(Groups.DevicesBeingMonitored.ordinal)
     }.build(showAfterBuild = show)
 
-    fun getDeviceBatteryMonitoringNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = NotificationCompat.Builder(context).apply {
-        Channels.BackgroundUpdatesDeviceBatteryLevels.channelId?.let { setChannelId(it) }
+    fun getDeviceBatteryMonitoringNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.BackgroundUpdatesDeviceBatteryLevels).apply {
         setContentTitle("$deviceName battery being monitored...")
         setContentText("Current battery: $batteryPercentage%")
         setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -92,8 +87,7 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         setTag(deviceName)
     }.build(showAfterBuild = show)
 
-    fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = NotificationCompat.Builder(context).apply {
-        Channels.LowBattery.channelId?.let { setChannelId(it) }
+    fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.LowBattery).apply {
         setContentTitle("Bluetooth device battery low")
         setContentText("$deviceName battery level $batteryPercentage%")
         setOngoing(true) // do not allow swiping away to accidentally swipe it. instead, we add a button to dismiss it.
@@ -104,6 +98,13 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         setSmallIcon(R.drawable.ic_launcher_foreground)
         addAction(android.R.drawable.ic_delete, "done", DismissNotificationService.getPendingIntent(context, id, tag))
     }.build(showAfterBuild = show)
+
+    @Suppress("DEPRECATION") // use deprecated version if SDK version doesn't support channel id
+    private fun getNotificationBuilder(context: Context, channel: Channels): NotificationCompat.Builder {
+        val channelId = channel.channelId ?: return NotificationCompat.Builder(context)
+
+        return NotificationCompat.Builder(context, channelId)
+    }
 
     enum class Groups { // You can group notifications together in tray that are related.
         LowBatteryDevices,

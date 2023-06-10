@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
             // user responded to permission request
             bluetoothDevicesViewModel.updateMissingPermissions(this) // get the next permission, if any
         }
-        
+
         setContent {
             MainActivityComposable(bluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick = {
                 startActivity(systemBluetoothSettingsIntent())

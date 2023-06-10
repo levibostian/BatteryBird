@@ -39,7 +39,7 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
 
         // Now we can begin the work!
         // Keep looping this function without returning
-        Thread.sleep(3.secondsToMillis()) // sometimes bluetooth device battery info isn't available right away. sleep to give OS a second to finish connecting to bluetooth device
+        Thread.sleep(1.secondsToMillis()) // sometimes bluetooth device battery info isn't available right away. sleep to give OS a second to finish connecting to bluetooth device
         checkBatteryLevels()
 
         log.debug("doWork done. Returning result.", this)
@@ -81,7 +81,7 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
                     }
                 }
 
-                Thread.sleep(10.secondsToMillis())
+                Thread.sleep(30.secondsToMillis())
             }
         }
     }

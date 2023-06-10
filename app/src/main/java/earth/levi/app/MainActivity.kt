@@ -10,8 +10,11 @@ import android.text.format.DateUtils.MINUTE_IN_MILLIS
 import android.text.format.DateUtils.WEEK_IN_MILLIS
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +35,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ChipColors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -64,11 +68,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.lifecycleScope
 import earth.levi.app.extensions.now
 import earth.levi.app.extensions.supportEmailIntent
@@ -83,9 +90,14 @@ import earth.levi.app.ui.theme.BatteryLevelLow
 import earth.levi.app.ui.theme.BatteryLevelMedium
 import earth.levi.app.ui.theme.BatteryLevelTrackDark
 import earth.levi.app.ui.theme.BatteryLevelTrackLight
+import earth.levi.app.ui.type.AnyCTA
+import earth.levi.app.ui.type.CTA
+import earth.levi.app.ui.type.RuntimePermission
+import earth.levi.app.ui.type.RuntimePermissionCTA
 import earth.levi.app.viewmodel.BluetoothDevicesViewModel
 import earth.levi.app.viewmodel.bluetoothDevicesViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -97,44 +109,64 @@ class MainActivity : ComponentActivity() {
 
     private val bluetoothDevicesViewModel by viewModelDiGraph { DiGraph.instance.bluetoothDevicesViewModel }
 
+    private lateinit var onActivityResultPermission: ActivityResultLauncher<String>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        onActivityResultPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            // user responded to permission request
+            bluetoothDevicesViewModel.updateMissingPermissions(this) // get the next permission, if any
+        }
+        
         setContent {
             MainActivityComposable(bluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick = {
                 startActivity(systemBluetoothSettingsIntent())
             }, contactUsOnClick = {
                 startActivity(supportEmailIntent())
+            }, setupCtaOnClick = { ctaClicked ->
+                when (ctaClicked) {
+                    is RuntimePermissionCTA -> {
+                        onActivityResultPermission.launch(ctaClicked.permission.string)
+                        bluetoothDevicesViewModel.hasAskedForPermission(this, ctaClicked.permission)
+                    }
+                }
             })
-
-            // TODO: show a CTA view for bluetooth permission
-            // TODO: show a CTA view for notification permissione
         }
     }
 
-//        // required to get runtime permission in order to get broadcast receiver notifications if bluetooth device connected or not.
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            Button(onClick = {
-//                requestPermissions(arrayOf(bluetooth.getPairedDevicesPermission), 0)
-//            }) {
-//                Text(text = "bluetooth permission")
-//            }
-//        }
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//            Button(onClick = {
-//                requestPermissions(arrayOf(notifications.showNotificationPermission), 1)
-//            }) {
-//                Text(text = "notification permission")
-//            }
+    override fun onResume() {
+        super.onResume()
+
+        bluetoothDevicesViewModel.updateMissingPermissions(this)
+    }
 }
 
 @Composable
-fun MainActivityComposable(bluetoothDevicesViewModel: BluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit) {
+fun MainActivityComposable(bluetoothDevicesViewModel: BluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit, setupCtaOnClick: (AnyCTA) -> Unit) {
     val bluetoothDevices = bluetoothDevicesViewModel.observePairedDevices.collectAsState()
+    val missingPermissionCtas = bluetoothDevicesViewModel.observeMissingPermissions.collectAsState().value.map { missingPermission ->
+        RuntimePermissionCTA(
+            title = when (missingPermission) {
+                RuntimePermission.Bluetooth -> "View your list of Bluetooth devices"
+                RuntimePermission.Notifications -> "Low battery reminders"
+            },
+            description = when (missingPermission) {
+                RuntimePermission.Bluetooth -> "App requires permission to Bluetooth to begin monitoring Bluetooth device battery levels. Until then, you will see these demo devices 😉."
+                RuntimePermission.Notifications -> "Receive notifications to remind you to charge your Bluetooth devices when they have a low battery."
+            },
+            actionTitle = when (missingPermission) {
+                RuntimePermission.Bluetooth -> "Accept Bluetooth permission"
+                RuntimePermission.Notifications -> "Accept notifications permission"
+            },
+            permission = missingPermission
+        )
+    }
 
     MainActivityScreen(
         bluetoothDevices = bluetoothDevices.value,
+        setupCTAs = missingPermissionCtas,
+        setupCtaOnClick,
         toolbarBluetoothSettingsOnClick,
         contactUsOnClick
     )
@@ -142,7 +174,13 @@ fun MainActivityComposable(bluetoothDevicesViewModel: BluetoothDevicesViewModel,
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainActivityScreen(bluetoothDevices: List<BluetoothDevice>, toolbarBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit) {
+fun MainActivityScreen(
+    bluetoothDevices: List<BluetoothDevice>,
+    setupCTAs: List<AnyCTA>,
+    ctaActionOnClick: (AnyCTA) -> Unit,
+    toolbarBluetoothSettingsOnClick: () -> Unit,
+    contactUsOnClick: () -> Unit
+) {
     AppTheme {
         Scaffold(
             topBar = { BluetoothDevicesTopAppBar(
@@ -150,7 +188,7 @@ fun MainActivityScreen(bluetoothDevices: List<BluetoothDevice>, toolbarBluetooth
                 contactUsOnClick = contactUsOnClick)
             }
         ) { contentPadding ->
-            Column(Modifier.padding(top = contentPadding.calculateTopPadding())) {
+            Box(Modifier.padding(top = contentPadding.calculateTopPadding()).fillMaxSize()) {
                 LazyColumn {
                     items(bluetoothDevices, key = { it.hardwareAddress }) {
                         Row(Modifier.padding(10.dp)) {
@@ -172,6 +210,24 @@ fun MainActivityScreen(bluetoothDevices: List<BluetoothDevice>, toolbarBluetooth
                         }
                     }
                 }
+
+                setupCTAs.firstOrNull()?.let { cta ->
+                    CTAView(cta = cta, onClick = ctaActionOnClick,
+                        modifier = Modifier.zIndex(1f).align(Alignment.BottomCenter).padding(vertical = 20.dp, horizontal = 20.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CTAView(cta: AnyCTA, onClick: (AnyCTA) -> Unit, modifier: Modifier = Modifier) {
+    Card(modifier.shadow(12.dp)) {
+        Column(Modifier.padding(vertical = 10.dp, horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = cta.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = cta.description, modifier = Modifier.padding(10.dp))
+            Button(onClick = { onClick(cta) }) {
+                Text(text = cta.actionTitle)
             }
         }
     }
@@ -254,5 +310,7 @@ fun MiscMenuOptionsDropdown(expanded: Boolean, onDismissRequest: () -> Unit, sys
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 fun MainActivityScreenPhonePreview() {
-    MainActivityScreen(bluetoothDevices = Samples.bluetoothDevices, {}) {}
+    MainActivityScreen(
+        bluetoothDevices = Samples.bluetoothDevices,
+        setupCTAs = listOf(RuntimePermissionCTA.sample), {},  {}, {})
 }

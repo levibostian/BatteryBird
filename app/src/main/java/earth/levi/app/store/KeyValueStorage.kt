@@ -8,6 +8,7 @@ import earth.levi.app.extensions.toJsonString
 import earth.levi.app.extensions.toObjectFromJsonString
 import earth.levi.app.model.BluetoothDevice
 import earth.levi.app.model.BluetoothDeviceModel
+import earth.levi.app.ui.type.RuntimePermission
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
@@ -19,9 +20,10 @@ val DiGraph.keyValueStorage: KeyValueStorage
 
 open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
 
-    enum class Keys {
+     enum class Keys {
         PairedBluetoothDevices,
-        NotificationShown;
+        NotificationShown,
+        HasNeverAskedForARuntimePermission
     }
 
     private val flowSharedPreferences: FlowSharedPreferences
@@ -38,6 +40,12 @@ open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
             .map { string ->
                 if (string.isBlank()) emptyList() else string.toObjectFromJsonString()
             }
+
+    fun hasAskedForPermission(permission: RuntimePermission): Boolean = sharedPreferences.getBoolean("${Keys.HasNeverAskedForARuntimePermission.name}_${permission.string}", false)
+
+    fun permissionHasBeenAsked(permission: RuntimePermission) {
+        sharedPreferences.edit().putBoolean("${Keys.HasNeverAskedForARuntimePermission.name}_${permission.string}", true).commit()
+    }
 }
 
 inline fun <reified T> SharedPreferences.Editor.putJson(key: String, value: T): SharedPreferences.Editor {

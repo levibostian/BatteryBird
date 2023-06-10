@@ -6,7 +6,9 @@ import android.content.Context
 import androidx.annotation.RequiresPermission
 import earth.levi.app.DiGraph
 import earth.levi.app.model.BluetoothDevice
+import earth.levi.app.store.KeyValueStorage
 import earth.levi.app.store.NotificationsStore
+import earth.levi.app.store.keyValueStorage
 import earth.levi.app.store.notificationsStore
 
 val DiGraph.bluetoothDeviceMonitoringNotifications: BluetoothDeviceMonitoringNotifications

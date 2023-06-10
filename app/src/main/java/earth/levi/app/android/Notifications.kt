@@ -23,12 +23,15 @@ import earth.levi.app.store.KeyValueStorage
 import earth.levi.app.store.NotificationsStore
 import earth.levi.app.store.keyValueStorage
 import earth.levi.app.store.notificationsStore
+import earth.levi.app.ui.type.RuntimePermission
 import kotlinx.serialization.Serializable
 
 val DiGraph.notifications: Notifications
     get() = Notifications(notificationManager, notificationsStore)
 
-open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore) {
+open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore): AndroidFeature() {
+
+    override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Notifications)
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     val showNotificationPermission = Manifest.permission.POST_NOTIFICATIONS

@@ -12,6 +12,7 @@ import earth.levi.app.android.bluetooth
 import earth.levi.app.android.bluetoothDeviceMonitoringNotifications
 import earth.levi.app.android.id
 import earth.levi.app.android.notifications
+import earth.levi.app.extensions.now
 import earth.levi.app.extensions.secondsToMillis
 import earth.levi.app.log.logger
 import earth.levi.app.model.BluetoothDevice
@@ -63,7 +64,7 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
                         hardwareAddress = pairedDevice.address,
                         name = pairedDevice.name,
                         batteryLevel = batteryLevelOfDevice,
-                        lastTimeConnected = Clock.System.now()
+                        lastTimeConnected = now()
                     )
                 }
 

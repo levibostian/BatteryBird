@@ -18,6 +18,7 @@ abstract class BaseViewModel(override val androidFeaturesUsedInViewModel: List<A
     private var _missingRuntimePermissions: MutableStateFlow<List<RuntimePermission>> = MutableStateFlow(emptyList())
     override val observeMissingPermissions: StateFlow<List<RuntimePermission>> = _missingRuntimePermissions
 
+    // Call this function when your UI starts (onResume good place) and when user interacts with a permission pop-up so you should update permissions needed.
     override fun updateMissingPermissions(activity: Activity)  {
         _missingRuntimePermissions.value = androidFeaturesUsedInViewModel.flatMap {
             it.getRequiredPermissions().filter { permission ->
@@ -40,6 +41,7 @@ abstract class BaseViewModel(override val androidFeaturesUsedInViewModel: List<A
         }
     }
 
+    // Call when you tell the OS to show the runtime permission pop-up
     override fun hasAskedForPermission(activity: Activity, permission: RuntimePermission) {
         keyValueStorage.permissionHasBeenAsked(permission)
     }

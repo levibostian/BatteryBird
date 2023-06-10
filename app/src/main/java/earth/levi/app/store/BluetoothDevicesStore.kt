@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 
+// We want to store bluetooth devices to app storage so that we keep a history of devices. We can then display historical data in the app's UI.
 interface BluetoothDevicesStore {
     var pairedDevices: List<BluetoothDeviceModel>
     val observePairedDevices: Flow<List<BluetoothDeviceModel>>

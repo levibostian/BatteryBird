@@ -1,4 +1,5 @@
 package earth.levi.app.model.samples
 
 
-object Samples {}
+// Extend this object in other files to keep sample data separated
+object Samples

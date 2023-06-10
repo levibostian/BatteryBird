@@ -9,7 +9,7 @@ import android.os.Build
 // CTA messages to try and get the permission accepted.
 sealed class RuntimePermission {
     abstract val string: String // Only call this *after* checking if device requires permission or you could crash app
-    abstract val doesDeviceRequirePermission: Boolean
+    abstract val doesDeviceRequirePermission: Boolean // Specify what api level the runtime permission was introduced. We do not ask for permission if we don't have to.
 
     object Bluetooth : RuntimePermission() {
         override val doesDeviceRequirePermission: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

@@ -7,7 +7,10 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.core.content.getSystemService
-
+import androidx.activity.ComponentActivity
+import androidx.activity.viewModels
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 
 class DiGraph(
     val bluetoothManager: BluetoothManager,
@@ -23,6 +26,19 @@ class DiGraph(
                 notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager,
                 sharedPreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE)
             )
+        }
+    }
+}
+
+inline fun <reified VM : ViewModel> ComponentActivity.viewModelDiGraph(
+    noinline createInstance: (() -> VM)
+): Lazy<VM> {
+    return viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T: ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return createInstance() as T
+            }
         }
     }
 }

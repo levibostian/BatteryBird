@@ -18,17 +18,17 @@ class NotificationsStore(val sharedPreferences: SharedPreferences): KeyValueStor
 
         existingNotificationsShown.add(notification)
 
-        sharedPreferences.edit().putSerializable(Keys.NotificationShown.name, existingNotificationsShown).commit()
+        sharedPreferences.edit().putJson(Keys.NotificationShown.name, existingNotificationsShown).commit()
     }
 
     val notificationsShown: List<ShownNotification>
-        get() = sharedPreferences.getSerializable(Keys.NotificationShown.name) ?: emptyList()
+        get() = sharedPreferences.getFromJson(Keys.NotificationShown.name) ?: emptyList()
 
     fun removeNotificationShown(notification: ShownNotification) {
         val existingNotificationsShown = this.notificationsShown.toMutableList()
 
         existingNotificationsShown.remove(notification)
 
-        sharedPreferences.edit().putSerializable(Keys.NotificationShown.name, existingNotificationsShown).commit()
+        sharedPreferences.edit().putJson(Keys.NotificationShown.name, existingNotificationsShown).commit()
     }
 }

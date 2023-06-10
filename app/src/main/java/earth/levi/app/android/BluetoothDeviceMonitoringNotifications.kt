@@ -2,11 +2,13 @@ package earth.levi.app.android
 
 import android.Manifest
 import android.app.NotificationManager
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.annotation.RequiresPermission
 import earth.levi.app.DiGraph
+import earth.levi.app.model.BluetoothDevice
+import earth.levi.app.store.KeyValueStorage
 import earth.levi.app.store.NotificationsStore
+import earth.levi.app.store.keyValueStorage
 import earth.levi.app.store.notificationsStore
 
 val DiGraph.bluetoothDeviceMonitoringNotifications: BluetoothDeviceMonitoringNotifications
@@ -15,8 +17,8 @@ val DiGraph.bluetoothDeviceMonitoringNotifications: BluetoothDeviceMonitoringNot
 class BluetoothDeviceMonitoringNotifications(notificationManager: NotificationManager, notificationsStore: NotificationsStore) : Notifications(notificationManager, notificationsStore) {
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    fun updateDevicesMonitoredNotifications(context: Context, connectedDevicesWithBatteryLevel: List<Pair<BluetoothDevice, Int>>) {
-        val pairedDevicesTags = connectedDevicesWithBatteryLevel.map { it.first.name }
+    fun updateDevicesMonitoredNotifications(context: Context, connectedDevices: List<BluetoothDevice>) {
+        val pairedDevicesTags = connectedDevices.map { it.name }
         val existingDeviceMonitoringNotifications = shownNotifications.filter { activeNotification ->
             activeNotification.id == Groups.DevicesBeingMonitored.ordinal && activeNotification.tag != null
         }
@@ -26,8 +28,8 @@ class BluetoothDeviceMonitoringNotifications(notificationManager: NotificationMa
             cancel(it)
         }
 
-        connectedDevicesWithBatteryLevel.forEach {
-            getDeviceBatteryMonitoringNotification(context, it.first.name, it.second, show = true)
+        connectedDevices.forEach {
+            getDeviceBatteryMonitoringNotification(context, it.name, it.batteryLevel, show = true)
         }
     }
 

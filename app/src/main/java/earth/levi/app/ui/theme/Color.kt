@@ -2,10 +2,12 @@ package earth.levi.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple200 = Color(0xFFBB86FC)
-val Purple500 = Color(0xFF6200EE)
-val Purple700 = Color(0xFF3700B3)
-val Teal200 = Color(0xFF03DAC5)
+val Primary = Color(0xFFF17300)
+val Secondary = Color(0xFF4CB944)
+
+// Status bar
+val StatusBar = Color(0xFF0B132B)
+val StatusBarDark = Color.Black
 
 // Battery levels
 val BatteryLevelHigh = Color(0xFF4CB944)

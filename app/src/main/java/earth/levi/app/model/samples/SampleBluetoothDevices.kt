@@ -4,6 +4,7 @@ import earth.levi.app.extensions.minus
 import earth.levi.app.extensions.now
 import earth.levi.app.model.BluetoothDevice
 import earth.levi.app.model.BluetoothDeviceDemo
+import earth.levi.app.model.BluetoothDeviceModel
 
 val Samples.bluetoothDevices: List<BluetoothDevice>
     get() = listOf(
@@ -13,3 +14,13 @@ val Samples.bluetoothDevices: List<BluetoothDevice>
         BluetoothDeviceDemo("WX:1Z:2E:DG:08:83", "Pods", 40, lastTimeConnected = now().minus(days = 12, hours = 3, minutes = 35)),
         BluetoothDeviceDemo("7V:OX:7C:IB:MN:17", "Music ear buds", 10, lastTimeConnected = now().minus(days = 12, hours = 3, minutes = 35)),
     )
+
+val Samples.bluetoothDeviceModels: List<BluetoothDeviceModel>
+    get() = bluetoothDevices.map { bluetoothDevice ->
+        BluetoothDeviceModel(
+            hardwareAddress = bluetoothDevice.hardwareAddress,
+            name = bluetoothDevice.name,
+            batteryLevel = bluetoothDevice.batteryLevel,
+            lastTimeConnected = bluetoothDevice.lastTimeConnected
+        )
+    }

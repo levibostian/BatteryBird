@@ -9,10 +9,14 @@ import androidx.core.content.ContextCompat
 import earth.levi.app.store.KeyValueStorage
 import earth.levi.app.ui.type.RuntimePermission
 
-abstract class AndroidFeature {
+interface AndroidFeature {
+    fun getRequiredPermissions(): List<RuntimePermission>
+}
+
+abstract class AndroidFeatureImpl: AndroidFeature {
 
     // Each Android feature may require runtime permissions. They are returned in this function.
-    abstract fun getRequiredPermissions(): List<RuntimePermission>
+    abstract override fun getRequiredPermissions(): List<RuntimePermission>
 
     fun isPermissionGranted(permission: RuntimePermission, context: Context): Boolean {
         if (!permission.doesDeviceRequirePermission) return true

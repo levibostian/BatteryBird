@@ -34,13 +34,26 @@
         </receiver>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.BluetoothBatteryAlert">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".activity.DemoActivity"
+            android:exported="true">
+            <intent-filter> <!-- app scheme deep links: https://developer.android.com/training/app-links/deep-linking#adding-filters -->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "batterybird://*" -->
+                <data android:scheme="batterybird" />
+                <!-- Accepts URIs that ends with "*://*/demo" -->
+                <data android:pathPrefix="/demo" />
             </intent-filter>
         </activity>
     </application>

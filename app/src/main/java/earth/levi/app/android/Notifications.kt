@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializable
 val DiGraph.notifications: Notifications
     get() = Notifications(notificationManager, notificationsStore)
 
-open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore): AndroidFeature() {
+open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore): AndroidFeatureImpl() {
 
     override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Notifications)
 
@@ -75,16 +75,6 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         setSortKey("aaaaaaa") // we want this notification to be displayed on top of group so set sort key to something that can't be beat lexicographically
         setOngoing(true)
         setId(Groups.DevicesBeingMonitored.ordinal)
-    }.build(showAfterBuild = show)
-
-    fun getDeviceBatteryMonitoringNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.BackgroundUpdatesDeviceBatteryLevels).apply {
-        setContentTitle("$deviceName battery being monitored...")
-        setContentText("Current battery: $batteryPercentage%")
-        setSmallIcon(R.drawable.ic_launcher_foreground)
-        setGroup(Groups.DevicesBeingMonitored.name)
-        setOngoing(true)
-        setId(Groups.DevicesBeingMonitored.ordinal)
-        setTag(deviceName)
     }.build(showAfterBuild = show)
 
     fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.LowBattery).apply {

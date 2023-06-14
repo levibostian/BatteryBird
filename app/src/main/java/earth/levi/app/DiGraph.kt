@@ -28,6 +28,14 @@ class DiGraph(
             )
         }
     }
+
+    val overrides: MutableMap<String, Any> = mutableMapOf()
+
+    fun <DEP> override(dependency: Class<DEP>, value: DEP) {
+        overrides[dependency.name] = value as Any
+    }
+
+    inline fun <reified DEP> override(): DEP? = overrides[DEP::class.java.name] as? DEP
 }
 
 inline fun <reified VM : ViewModel> ComponentActivity.viewModelDiGraph(

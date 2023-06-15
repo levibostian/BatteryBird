@@ -1,0 +1,19 @@
+name: Deploy Release 
+
+on: 
+  push: 
+    branches: [main]
+
+jobs: 
+  deploy-git-tag: 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # allow pushing of a git tag to the repo. 
+    steps: 
+    - uses: actions/checkout@v3
+    - name: Install tools used to make deployment 
+      run: |
+        npm i -g semantic-release conventional-changelog-conventionalcommits @semantic-release/github
+    - name: Create git tag automatically via semantic-release 
+      run: semantic-release
+    

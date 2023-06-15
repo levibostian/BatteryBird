@@ -16,4 +16,6 @@ jobs:
         npm i -g semantic-release conventional-changelog-conventionalcommits @semantic-release/github
     - name: Create git tag automatically via semantic-release 
       run: semantic-release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     

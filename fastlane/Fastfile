@@ -1,0 +1,33 @@
+
+platform :android do 
+
+  lane :update_version do |args| 
+    next_version = args[:next_version]
+
+    android_set_version_name(
+      version_name: next_version,
+      gradle_file: 'app/build.gradle.kts'
+    )
+
+    android_set_version_code(
+      version_code: Time.now.to_i.to_s, # build number is required to be unique. Use time to make it always unique
+      gradle_file: 'app/build.gradle.kts'
+    )
+  end 
+
+  lane :build_and_deploy do 
+    build_android_app(
+      task: "bundle",
+      build_type: "Release"
+    )
+
+    # Create service account JSON file in: Play Console -> Setup -> API access -> Service accounts -> View in google cloud -> keys. 
+    # Full details: http://docs.fastlane.tools/actions/upload_to_play_store/#upload_to_play_store
+    upload_to_play_store(
+      release_status: "draft",
+      track: "beta",
+      json_key: ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_PATH"]
+    )
+  end 
+
+end 

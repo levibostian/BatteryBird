@@ -1,0 +1,62 @@
+name: Deploy Release 
+
+on: 
+  push: 
+    branches: [main]
+
+jobs: 
+  make-new-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # allow pushing of a git tag to the repo. 
+    steps: 
+    - uses: actions/checkout@v3
+
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Verify gradle scripts are not modified 
+      uses: gradle/wrapper-validation-action@v1
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2 
+    
+    - name: Setup Gradle and cache dependencies between builds 
+      uses: gradle/gradle-build-action@v2
+
+    - name: Install tools from Gemfile (ruby language) used for building app
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3'
+        bundler-cache: true # cache tools to make builds faster in future 
+
+    - name: Install node tools used to make deployment 
+      run: |
+        npm i -g semantic-release conventional-changelog-conventionalcommits @semantic-release/github @semantic-release/exec
+
+    - name: Create production Android keystore file 
+      uses: levibostian/action-random-file@main
+      id: create-keystore-file
+      with:
+        base64-file-content: ${{ secrets.ANDROID_RELEASE_SIGNING_KEY_FILE_BASE64 }}
+        file-name: "key"
+    
+    - name: Create Google Service Account file for uploading to Play 
+      uses: levibostian/action-random-file@main
+      id: create-google-play-service-account-file
+      with:
+        base64-file-content: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_B64 }}
+        file-name: "service_account.json"
+
+    - name: Create git tag and upload app to app stores 
+      run: semantic-release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required by semantic-release 
+        GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_PATH: ${{ steps.create-google-play-service-account-file.outputs.path }}
+        ANDROID_SIGNING_KEY_FILE_PATH: ${{ steps.create-keystore-file.outputs.path }}
+        ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+    

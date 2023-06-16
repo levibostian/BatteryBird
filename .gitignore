@@ -1,4 +1,6 @@
 .DS_Store
+fastlane/README.md
+fastlane/report.xml
 
 # Gradle files
 .gradle/

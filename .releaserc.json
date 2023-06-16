@@ -11,7 +11,7 @@
             "preset": "conventionalcommits"
         }],
         ["@semantic-release/exec", {
-            "publishCmd": "fastlane android update_version next_version:${nextRelease.version} && fastlane android build_and_deploy"
+            "publishCmd": "bundle exec fastlane android update_version next_version:${nextRelease.version} && bundle exec fastlane android build_and_deploy"
         }],
         ["@semantic-release/github", {
             "labels": false,

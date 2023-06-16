@@ -28,6 +28,16 @@ android {
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
+
+            signingConfigs {
+                create("release") {
+                    storeFile = file(System.getenv("ANDROID_SIGNING_KEY_FILE_PATH") ?: "/fake/path") // gradle fails if env value not set this uses a non-working default string.
+                    keyAlias = "upload"
+                    storePassword = System.getenv("ANDROID_SIGNING_KEY_STORE_PASSWORD")
+                    keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+                }
+            }
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -1,0 +1,52 @@
+
+platform :android do 
+
+  lane :update_version do |args| 
+    next_version = args[:next_version]
+
+    android_set_version_name(
+      version_name: next_version
+    )
+
+    android_set_version_code(
+      version_code: Time.now.to_i.to_s # build number is required to be unique. Use time to make it always unique
+    )
+  end 
+
+  lane :build_and_deploy do 
+    build_android_app(
+      task: "bundle",
+      build_type: "Release"
+    )
+
+    # Create service account JSON file in: Play Console -> Setup -> API access -> Service accounts -> View in google cloud -> keys. 
+    # Full details: http://docs.fastlane.tools/actions/upload_to_play_store/#upload_to_play_store
+    upload_to_play_store(
+      release_status: "draft",
+      track: "beta",
+      json_key: setup_google_service_account(environment_variable_key: "GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_B64")
+    )
+  end 
+
+end 
+
+# Create a temporary file on the file system with contents of base64 decoded string. Makes setup easier as you just need to set an (secret) environment variable to authenticate. 
+lane :setup_google_service_account do |values|
+  environment_variable_key = values[:environment_variable_key]
+
+  base64encoded_service_account_file = ENV[environment_variable_key]
+  if base64encoded_service_account_file.nil?
+    UI.user_error!("Script needs to authenticate with the Google API, but the environment variable #{environment_variable_key} has not been set.")
+  end   
+
+  random_string = SecureRandom.hex
+  random_directory_save_gckeys_file = "/tmp/#{random_string}/"
+  gc_keys_file_location = "#{random_directory_save_gckeys_file}gc_keys.json"
+
+  UI.message("gc_keys.json file for storage auth stored at: #{gc_keys_file_location}")
+
+  FileUtils.mkdir_p(random_directory_save_gckeys_file)
+  File.open(gc_keys_file_location, 'w') { |file| file.write(Base64.decode64(base64encoded_service_account_file)) }  
+
+  gc_keys_file_location # ruby doesn't use return keyword so we just put the return value variable as the last line to return it
+end 

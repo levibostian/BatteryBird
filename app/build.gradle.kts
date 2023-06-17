@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.cli.jvm.main
+import org.jetbrains.kotlin.gradle.idea.proto.generated.kpm.ideaKpmSchemaInfoProto
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -7,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "earth.levi.app"
+    namespace = "app"
     compileSdk = 33
     compileSdkPreview = "UpsideDownCake"
 
@@ -70,6 +72,11 @@ android {
     packagingOptions {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    sourceSets {
+        getByName("main") {
+            java.setSrcDirs(listOf("src/main/kotlin"))
         }
     }
 }

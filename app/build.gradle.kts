@@ -25,6 +25,10 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            applicationIdSuffix = ".debug" // allows you to have prod and debug builds of app on same device
+        }
+
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true

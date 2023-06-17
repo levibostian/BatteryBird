@@ -63,23 +63,25 @@ open class Notifications(val notificationManager: NotificationManager, val notif
     }
 
     fun getBatteryMonitoringNotification(context: Context, show: Boolean = false) = getNotificationBuilder(context, Channels.BackgroundUpdatesDeviceBatteryLevels).apply {
-        setContentTitle("Monitoring battery levels...")
-        setSmallIcon(R.drawable.ic_launcher_foreground)
+        setContentTitle("Monitoring Bluetooth battery levels...")
+        setSmallIcon(R.drawable.notification_small_monitoring)
         setGroup(Groups.DevicesBeingMonitored.name)
         setSortKey("aaaaaaa") // we want this notification to be displayed on top of group so set sort key to something that can't be beat lexicographically
         setOngoing(true)
+        color = context.resources.getColor(R.color.monitoring_notification)
         setId(Groups.DevicesBeingMonitored.ordinal)
     }.build(showAfterBuild = show)
 
     fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.LowBattery).apply {
-        setContentTitle("Bluetooth device battery low")
-        setContentText("$deviceName battery level $batteryPercentage%")
+        setContentTitle("$deviceName needs charged")
+        setContentText("Battery level $batteryPercentage%")
         setOngoing(true) // do not allow swiping away to accidentally swipe it. instead, we add a button to dismiss it.
         setOnlyAlertOnce(true) // only play sound once. if notification gets updated later, update content but no alert
         setGroup(Groups.LowBatteryDevices.name)
         setId(Groups.LowBatteryDevices.ordinal)
         setTag(deviceName)
-        setSmallIcon(R.drawable.ic_launcher_foreground)
+        setSmallIcon(R.drawable.notification_small_low_battery)
+        color = context.resources.getColor(R.color.battery_low_notification)
         addAction(android.R.drawable.ic_delete, "done", DismissNotificationService.getPendingIntent(context, id, tag))
     }.build(showAfterBuild = show)
 

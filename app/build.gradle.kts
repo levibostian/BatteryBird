@@ -11,7 +11,6 @@ plugins {
 android {
     namespace = "app"
     compileSdk = 33
-    compileSdkPreview = "UpsideDownCake"
 
     defaultConfig {
         applicationId = "earth.levi.bluetoothbattery"
@@ -107,9 +106,9 @@ dependencies {
     implementation("com.fredporciuncula:flow-preferences:[1.9.1,)")
 
     // AndroidX
-    implementation("androidx.core:core-ktx:[1.7,)")
+    implementation("androidx.core:core-ktx:[1.7,1.12)") // 1.12 requires target API 34. Update when 34 becomes stable
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
-    implementation("androidx.activity:activity-compose:[1.7,)")
+    implementation("androidx.activity:activity-compose:[1.7,1.8)") // 1.8 requires target API 34
 
     // WorkManager 
     implementation("androidx.work:work-runtime-ktx:[2.8,)")

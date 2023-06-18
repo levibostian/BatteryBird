@@ -25,6 +25,15 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("ANDROID_SIGNING_KEY_FILE_PATH") ?: "/fake/path") // gradle throws error in file() if env var not found. provide default vale to avoid error during development
+            keyAlias = "upload"
+            storePassword = System.getenv("ANDROID_SIGNING_KEY_STORE_PASSWORD")
+            keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".debug" // allows you to have prod and debug builds of app on same device
@@ -68,14 +77,6 @@ android {
     sourceSets {
         getByName("main") {
             java.setSrcDirs(listOf("src/main/kotlin"))
-        }
-    }
-    signingConfigs {
-        create("release") {
-            storeFile = file(System.getenv("ANDROID_SIGNING_KEY_FILE_PATH"), PathValidation.NONE)
-            keyAlias = "upload"
-            storePassword = System.getenv("ANDROID_SIGNING_KEY_STORE_PASSWORD")
-            keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
         }
     }
 }

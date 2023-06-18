@@ -26,7 +26,8 @@ platform :android do
     upload_to_play_store(
       release_status: "draft",
       track: "beta",
-      json_key: ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_PATH"]
+      json_key: ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_PATH"],
+      timeout: 600 # workaround for google play API. https://github.com/fastlane/fastlane/issues/21126
     )
   end 
 

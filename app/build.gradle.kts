@@ -36,10 +36,10 @@ android {
 
             signingConfigs {
                 create("release") {
-                    storeFile = file(System.getenv("ANDROID_SIGNING_KEY_FILE_PATH") ?: "/fake/path") // gradle fails if env value not set this uses a non-working default string.
+                    storeFile = file(getEnv("ANDROID_SIGNING_KEY_FILE_PATH", defaultValue = "/fake/path")) // file() fails when using empty string for default
                     keyAlias = "upload"
-                    storePassword = System.getenv("ANDROID_SIGNING_KEY_STORE_PASSWORD")
-                    keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+                    storePassword = getEnv("ANDROID_SIGNING_KEY_STORE_PASSWORD")
+                    keyPassword = getEnv("ANDROID_SIGNING_KEY_PASSWORD")
                 }
             }
 
@@ -124,3 +124,15 @@ dependencies {
 
 // enables dependency locking for dependencies
 dependencyLocking { lockAllConfigurations() }
+
+fun getEnv(key: String, defaultValue: String = "", throwOnCI: Boolean = true): String {
+    val value = System.getenv()[key]
+    val isRunningOnCI = !System.getenv()["IS_CI"].isNullOrBlank()
+
+    return if (!value.isNullOrBlank()) value
+    else {
+        if (isRunningOnCI && throwOnCI) throw IllegalArgumentException("Environment variable with key $key is not set")
+
+        defaultValue
+    }
+}

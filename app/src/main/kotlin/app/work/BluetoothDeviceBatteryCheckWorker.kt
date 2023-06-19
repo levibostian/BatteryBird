@@ -63,11 +63,13 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
                     log.debug("device: ${bluetoothDevice.name}, battery: ${bluetoothDevice.batteryLevel}", this)
 
                     if (bluetoothDevice.batteryLevel <= 20) {
-                        notifications.getBatteryLowNotification(applicationContext, bluetoothDevice.name, bluetoothDevice.batteryLevel, show = true)
+                        notifications.getBatteryLowNotification(applicationContext, bluetoothDevice.name, bluetoothDevice.hardwareAddress, bluetoothDevice.batteryLevel, show = true)
+                    } else {
+                        // device battery is not low. Meaning that the next time it is low, it should show a notification
                     }
                 }
 
-                Thread.sleep(30.secondsToMillis())
+                Thread.sleep(60.secondsToMillis())
             }
         }
     }

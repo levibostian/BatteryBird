@@ -15,15 +15,14 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import app.DiGraph
 import app.R
-import app.store.NotificationsStore
-import app.store.notificationsStore
 import app.ui.type.RuntimePermission
 import kotlinx.serialization.Serializable
+import kotlin.random.Random
 
 val DiGraph.notifications: Notifications
-    get() = Notifications(notificationManager, notificationsStore)
+    get() = Notifications(notificationManager)
 
-open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore): AndroidFeatureImpl() {
+open class Notifications(val notificationManager: NotificationManager): AndroidFeatureImpl() {
 
     override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Notifications)
 
@@ -36,20 +35,10 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         } else {
             notificationManager.notify(notificationId, notification)
         }
-
-        notificationsStore.notificationShown(ShownNotification(notificationId, notificationTag))
-    }
-
-    val shownNotifications: List<ShownNotification>
-        get() = notificationsStore.notificationsShown
-
-    fun cancel(shownNotification: ShownNotification) {
-        this.cancel(shownNotification.id, shownNotification.tag)
     }
 
     fun cancel(notificationId: Int, notificationTag: String?) {
         notificationManager.cancel(notificationTag, notificationId)
-        notificationsStore.removeNotificationShown(ShownNotification(notificationId, notificationTag))
     }
 
     @SuppressLint("NewApi") // because notification channels returns null if OS level too low, we can ignore lint error
@@ -72,14 +61,14 @@ open class Notifications(val notificationManager: NotificationManager, val notif
         setId(Groups.DevicesBeingMonitored.ordinal)
     }.build(showAfterBuild = show)
 
-    fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.LowBattery).apply {
+    fun getBatteryLowNotification(context: Context, deviceName: String, deviceHardwareAddress: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.LowBattery).apply {
         setContentTitle("$deviceName needs charged")
         setContentText("Battery level $batteryPercentage%")
         setOngoing(true) // do not allow swiping away to accidentally swipe it. instead, we add a button to dismiss it.
         setOnlyAlertOnce(true) // only play sound once. if notification gets updated later, update content but no alert
         setGroup(Groups.LowBatteryDevices.name)
-        setId(Groups.LowBatteryDevices.ordinal)
-        setTag(deviceName)
+        setId(deviceHardwareAddress.hashCode()) // what makes the notification unique from other low battery notifications
+        setTag(Groups.LowBatteryDevices.name)
         setSmallIcon(R.drawable.notification_small_low_battery)
         color = context.resources.getColor(R.color.battery_low_notification)
         addAction(android.R.drawable.ic_delete, "done", DismissNotificationService.getPendingIntent(context, id, tag))
@@ -153,9 +142,6 @@ open class Notifications(val notificationManager: NotificationManager, val notif
     }
 }
 
-@Serializable
-data class ShownNotification(val id: Int, val tag: String?)
-
 fun NotificationCompat.Builder.setId(value: Int) {
     addExtras(Bundle().apply { putInt("id", value) })
 }
@@ -183,7 +169,7 @@ class DismissNotificationService: Service() {
 
         fun getPendingIntent(context: Context, notificationId: Int, notificationTag: String?) = PendingIntent.getService(
             context,
-            0,
+            Random.nextInt(),
             Intent(context, DismissNotificationService::class.java).putExtra(notificationIdBundleKey, notificationId).putExtra(notificationTagBundleKey, notificationTag),
             PendingIntent.FLAG_IMMUTABLE
         )

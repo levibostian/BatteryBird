@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import app.DiGraph
 import app.extensions.toJsonString
 import app.extensions.toObjectFromJsonString
+import app.model.BluetoothDevice
 import app.model.BluetoothDeviceModel
 import app.ui.type.RuntimePermission
 import com.fredporciuncula.flow.preferences.FlowSharedPreferences
@@ -16,9 +17,9 @@ val DiGraph.keyValueStorage: KeyValueStorage
 open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
 
      enum class Keys {
-        PairedBluetoothDevices,
-        NotificationShown,
-        HasNeverAskedForARuntimePermission
+         PairedBluetoothDevices,
+         LowBatteryAlertForDeviceSent,
+         HasNeverAskedForARuntimePermission
     }
 
     private val flowSharedPreferences: FlowSharedPreferences
@@ -40,6 +41,18 @@ open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
 
     fun permissionHasBeenAsked(permission: RuntimePermission) {
         sharedPreferences.edit().putBoolean("${Keys.HasNeverAskedForARuntimePermission.name}_${permission.string}", true).commit()
+    }
+
+    fun setLowBatteryAlertSentForDevice(device: BluetoothDevice, alertSent: Boolean = true) {
+        sharedPreferences.edit().putBoolean("${Keys.LowBatteryAlertForDeviceSent}_${device.hardwareAddress}", alertSent).commit()
+    }
+
+    fun hasLowBatteryAlertBeenSentForDevice(device: BluetoothDevice): Boolean {
+        return sharedPreferences.getBoolean("${Keys.LowBatteryAlertForDeviceSent}_${device.hardwareAddress}", false)
+    }
+
+    fun deleteAll() {
+        sharedPreferences.edit().clear().commit()
     }
 }
 

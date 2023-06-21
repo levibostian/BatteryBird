@@ -1,0 +1,21 @@
+name: Tests
+
+on: [pull_request]
+
+jobs: 
+  jvm-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write # for junit test results parser 
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/setup-android
+    - run: ./gradlew :app:testDebugUnitTest
+    - name: Parse junit test results 
+      uses: mikepenz/action-junit-report@v3
+      if: success() || failure() # always run even if the previous step fails
+      with:
+        report_paths: 'app/build/test-results/test*/TEST-*.xml'
+        fail_on_failure: true 
+        require_tests: true 
+        check_name: "Unit test results"

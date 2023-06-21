@@ -11,21 +11,7 @@ jobs:
       contents: write # allow pushing of a git tag to the repo. 
     steps: 
     - uses: actions/checkout@v3
-
-    - name: Set up JDK
-      uses: actions/setup-java@v2
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Verify gradle scripts are not modified 
-      uses: gradle/wrapper-validation-action@v1
-
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2 
-    
-    - name: Setup Gradle and cache dependencies between builds 
-      uses: gradle/gradle-build-action@v2
+    - uses: ./.github/actions/setup-android
 
     - name: Install tools from Gemfile (ruby language) used for building app
       uses: ruby/setup-ruby@v1

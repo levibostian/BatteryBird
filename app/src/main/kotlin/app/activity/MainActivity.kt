@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import app.DiGraph
+import app.android.workManager
 import app.extensions.supportEmailIntent
 import app.extensions.systemBluetoothSettingsIntent
 import app.extensions.toRelativeTimeSpanString
@@ -102,6 +103,10 @@ class MainActivity : ComponentActivity() {
                 }
             })
         }
+
+        // Run Bluetooth worker when the app is opened so we can check the status of devices in case BroadcastReceiver did not get triggered.
+        // The worker should begin running a long-running task only if a device is currently connected.
+        DiGraph.instance.workManager.schedulePeriodicBluetoothDeviceBatteryCheck(this)
     }
 
     override fun onResume() {

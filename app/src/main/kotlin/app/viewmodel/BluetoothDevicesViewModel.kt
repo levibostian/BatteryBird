@@ -4,10 +4,10 @@ import android.app.Activity
 import androidx.lifecycle.viewModelScope
 import app.DiGraph
 import app.android.Bluetooth
-import app.android.Notifications
+import app.android.AndroidNotifications
 import app.android.WorkManager
 import app.android.bluetooth
-import app.android.notifications
+import app.android.androidNotifications
 import app.android.workManager
 import app.model.BluetoothDevice
 import app.model.samples.Samples
@@ -21,14 +21,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 val DiGraph.bluetoothDevicesViewModel: BluetoothDevicesViewModel
-    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, workManager, keyValueStorage, bluetooth, notifications)
+    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, workManager, keyValueStorage, bluetooth, androidNotifications)
 
 class BluetoothDevicesViewModel(
     private val bluetoothDevicesStore: BluetoothDevicesStore,
     private val workManager: WorkManager,
     keyValueStorage: KeyValueStorage,
     bluetooth: Bluetooth,
-    notifications: Notifications
+    notifications: AndroidNotifications
     ): BaseViewModel(androidFeaturesUsedInViewModel = listOf(bluetooth, notifications), keyValueStorage) {
 
     // Set demo data so the app has something to show in the UI

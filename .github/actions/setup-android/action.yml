@@ -1,0 +1,20 @@
+name: 'Android setup'
+description: 'Setup VM for Android'
+
+runs:
+  using: "composite"
+  steps:
+  - name: Set up JDK
+    uses: actions/setup-java@v2
+    with:
+      distribution: 'temurin'
+      java-version: '17'
+
+  - name: Verify gradle scripts are not modified 
+    uses: gradle/wrapper-validation-action@v1
+
+  - name: Setup Android SDK
+    uses: android-actions/setup-android@v2 
+    
+  - name: Setup Gradle and cache dependencies between builds 
+    uses: gradle/gradle-build-action@v2

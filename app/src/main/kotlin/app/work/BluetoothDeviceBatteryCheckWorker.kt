@@ -8,10 +8,10 @@ import androidx.work.WorkerParameters
 import app.DiGraph
 import app.android.bluetooth
 import app.android.id
-import app.android.notifications
 import app.extensions.secondsToMillis
 import app.log.logger
 import app.model.BluetoothDeviceModel
+import app.notifications.notifications
 import app.store.bluetoothDevicesStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,11 +63,13 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
                     log.debug("device: ${bluetoothDevice.name}, battery: ${bluetoothDevice.batteryLevel}", this)
 
                     if (bluetoothDevice.batteryLevel <= 20) {
-                        notifications.getBatteryLowNotification(applicationContext, bluetoothDevice.name, bluetoothDevice.batteryLevel, show = true)
+                        notifications.getBatteryLowNotification(applicationContext, bluetoothDevice, show = true)
+                    } else {
+                        notifications.dismissBatteryLowNotification(applicationContext, bluetoothDevice)
                     }
                 }
 
-                Thread.sleep(30.secondsToMillis())
+                Thread.sleep(60.secondsToMillis()) 
             }
         }
     }

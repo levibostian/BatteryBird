@@ -79,6 +79,11 @@ android {
             java.setSrcDirs(listOf("src/main/kotlin"))
         }
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true // from: https://robolectric.org/getting-started/
+        }
+    }
 }
 
 dependencies {
@@ -113,14 +118,20 @@ dependencies {
 
     // WorkManager 
     implementation("androidx.work:work-runtime-ktx:[2.8,)")
+    testImplementation("androidx.work:work-testing:[2.8,)")
 
     // Kotlinx
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:[1.5,)")
 
-    // junit, espresso
+    // junit, espresso, etc for testing
     testImplementation("junit:junit:[4.13,)")
-    androidTestImplementation("androidx.test.ext:junit:[1.1,)")
-    androidTestImplementation("androidx.test.espresso:espresso-core:[3.5,)")
+    testImplementation("androidx.test.ext:junit:[1.1,)")
+    testImplementation("org.robolectric:robolectric:[4.5.1,)")
+    testImplementation("androidx.test:core:[1.5.0,)")
+    testImplementation("androidx.test:runner:[1.5.2,)")
+    testImplementation("androidx.test:rules:[1.5.0,)")
+    testImplementation(kotlin("test")) // kotlin test assertions
+    testImplementation("io.mockk:mockk:[1.12.0,)")
 }
 
 // enables dependency locking for dependencies

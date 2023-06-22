@@ -14,83 +14,16 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import app.DiGraph
-import app.R
-import app.store.NotificationsStore
-import app.store.notificationsStore
 import app.ui.type.RuntimePermission
-import kotlinx.serialization.Serializable
+import kotlin.random.Random
 
-val DiGraph.notifications: Notifications
-    get() = Notifications(notificationManager, notificationsStore)
+val DiGraph.androidNotifications: AndroidNotifications
+    get() = AndroidNotificationsImpl(notificationManager)
 
-open class Notifications(val notificationManager: NotificationManager, val notificationsStore: NotificationsStore): AndroidFeatureImpl() {
-
-    override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Notifications)
-
-    fun showNotification(notification: Notification) {
-        val notificationId = notification.id
-        val notificationTag = notification.tag
-
-        if (notificationTag != null) {
-            notificationManager.notify(notificationTag, notificationId, notification)
-        } else {
-            notificationManager.notify(notificationId, notification)
-        }
-
-        notificationsStore.notificationShown(ShownNotification(notificationId, notificationTag))
-    }
-
-    val shownNotifications: List<ShownNotification>
-        get() = notificationsStore.notificationsShown
-
-    fun cancel(shownNotification: ShownNotification) {
-        this.cancel(shownNotification.id, shownNotification.tag)
-    }
-
-    fun cancel(notificationId: Int, notificationTag: String?) {
-        notificationManager.cancel(notificationTag, notificationId)
-        notificationsStore.removeNotificationShown(ShownNotification(notificationId, notificationTag))
-    }
-
-    @SuppressLint("NewApi") // because notification channels returns null if OS level too low, we can ignore lint error
-    fun createChannels() {
-        enumValues<Channels.Groups>().mapNotNull { it.group }.forEach { channelGroup ->
-            notificationManager.createNotificationChannelGroup(channelGroup)
-        }
-        enumValues<Channels>().mapNotNull { it.channel }.forEach { channel ->
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    fun getBatteryMonitoringNotification(context: Context, show: Boolean = false) = getNotificationBuilder(context, Channels.BackgroundUpdatesDeviceBatteryLevels).apply {
-        setContentTitle("Monitoring Bluetooth battery levels...")
-        setSmallIcon(R.drawable.notification_small_monitoring)
-        setGroup(Groups.DevicesBeingMonitored.name)
-        setSortKey("aaaaaaa") // we want this notification to be displayed on top of group so set sort key to something that can't be beat lexicographically
-        setOngoing(true)
-        color = context.resources.getColor(R.color.monitoring_notification)
-        setId(Groups.DevicesBeingMonitored.ordinal)
-    }.build(showAfterBuild = show)
-
-    fun getBatteryLowNotification(context: Context, deviceName: String, batteryPercentage: Int, show: Boolean = false) = getNotificationBuilder(context, Channels.LowBattery).apply {
-        setContentTitle("$deviceName needs charged")
-        setContentText("Battery level $batteryPercentage%")
-        setOngoing(true) // do not allow swiping away to accidentally swipe it. instead, we add a button to dismiss it.
-        setOnlyAlertOnce(true) // only play sound once. if notification gets updated later, update content but no alert
-        setGroup(Groups.LowBatteryDevices.name)
-        setId(Groups.LowBatteryDevices.ordinal)
-        setTag(deviceName)
-        setSmallIcon(R.drawable.notification_small_low_battery)
-        color = context.resources.getColor(R.color.battery_low_notification)
-        addAction(android.R.drawable.ic_delete, "done", DismissNotificationService.getPendingIntent(context, id, tag))
-    }.build(showAfterBuild = show)
-
-    @Suppress("DEPRECATION") // use deprecated version if SDK version doesn't support channel id
-    private fun getNotificationBuilder(context: Context, channel: Channels): NotificationCompat.Builder {
-        val channelId = channel.channelId ?: return NotificationCompat.Builder(context)
-
-        return NotificationCompat.Builder(context, channelId)
-    }
+interface AndroidNotifications: AndroidFeature {
+    fun showNotification(notification: Notification)
+    fun cancel(notificationId: Int, notificationTag: String?)
+    fun createChannels()
 
     enum class Groups { // You can group notifications together in tray that are related.
         LowBatteryDevices,
@@ -145,16 +78,37 @@ open class Notifications(val notificationManager: NotificationManager, val notif
                 }
         }
     }
+}
 
-    fun NotificationCompat.Builder.build(showAfterBuild: Boolean): Notification {
-        return build().also { notification ->
-            if (showAfterBuild) this@Notifications.showNotification(notification)
+open class AndroidNotificationsImpl(val notificationManager: NotificationManager): AndroidFeatureImpl(), AndroidNotifications {
+
+    override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Notifications)
+
+    override fun showNotification(notification: Notification) {
+        val notificationId = notification.id
+        val notificationTag = notification.tag
+
+        if (notificationTag != null) {
+            notificationManager.notify(notificationTag, notificationId, notification)
+        } else {
+            notificationManager.notify(notificationId, notification)
+        }
+    }
+
+    override fun cancel(notificationId: Int, notificationTag: String?) {
+        notificationManager.cancel(notificationTag, notificationId)
+    }
+
+    @SuppressLint("NewApi") // because notification channels returns null if OS level too low, we can ignore lint error
+    override fun createChannels() {
+        enumValues<AndroidNotifications.Channels.Groups>().mapNotNull { it.group }.forEach { channelGroup ->
+            notificationManager.createNotificationChannelGroup(channelGroup)
+        }
+        enumValues<AndroidNotifications.Channels>().mapNotNull { it.channel }.forEach { channel ->
+            notificationManager.createNotificationChannel(channel)
         }
     }
 }
-
-@Serializable
-data class ShownNotification(val id: Int, val tag: String?)
 
 fun NotificationCompat.Builder.setId(value: Int) {
     addExtras(Bundle().apply { putInt("id", value) })
@@ -183,7 +137,7 @@ class DismissNotificationService: Service() {
 
         fun getPendingIntent(context: Context, notificationId: Int, notificationTag: String?) = PendingIntent.getService(
             context,
-            0,
+            Random.nextInt(),
             Intent(context, DismissNotificationService::class.java).putExtra(notificationIdBundleKey, notificationId).putExtra(notificationTagBundleKey, notificationTag),
             PendingIntent.FLAG_IMMUTABLE
         )
@@ -197,7 +151,7 @@ class DismissNotificationService: Service() {
         val notificationId = intent.extras!!.getInt(notificationIdBundleKey)
         val notificationTag = intent.extras!!.getString(notificationTagBundleKey)
 
-        DiGraph.instance.notifications.cancel(notificationId, notificationTag)
+        DiGraph.instance.androidNotifications.cancel(notificationId, notificationTag)
 
         stopSelf()
 

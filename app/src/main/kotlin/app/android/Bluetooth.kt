@@ -19,9 +19,13 @@ val DiGraph.bluetoothAdapter: BluetoothAdapter
     get() = bluetoothManager.adapter
 
 val DiGraph.bluetooth: Bluetooth
-    get() = override() ?: BluetoothImpl(bluetoothAdapter)
+    get() = override() ?: BluetoothImpl()
 
-open class BluetoothImpl(private val systemBluetoothAdapter: BluetoothAdapter): AndroidFeatureImpl(), Bluetooth {
+open class BluetoothImpl: AndroidFeatureImpl(), Bluetooth {
+
+    // Get this later instead of in the constructor. Getting the bluetooth adapter might return null so we want to try and retrieve it only after
+    // we have done checks such as getting permission.
+    private val systemBluetoothAdapter by lazy { DiGraph.instance.bluetoothAdapter }
 
     @SuppressLint("MissingPermission") // we check if permission granted inside of the function.
     override fun getPairedDevices(context: Context): List<BluetoothDeviceModel> {
@@ -43,9 +47,9 @@ open class BluetoothImpl(private val systemBluetoothAdapter: BluetoothAdapter): 
 }
 
 val DiGraph.bluetoothStub: Bluetooth
-    get() = BluetoothSamplesStub(bluetoothAdapter)
+    get() = BluetoothSamplesStub()
 
-class BluetoothSamplesStub(systemBluetoothAdapter: BluetoothAdapter): BluetoothImpl(systemBluetoothAdapter) {
+class BluetoothSamplesStub: BluetoothImpl() {
 
     var samplePairedDevices: List<BluetoothDeviceModel> = Samples.bluetoothDeviceModels
 

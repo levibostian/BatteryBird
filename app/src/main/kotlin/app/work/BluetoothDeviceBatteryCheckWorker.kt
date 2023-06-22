@@ -69,7 +69,7 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
                     }
                 }
 
-                Thread.sleep(60.secondsToMillis()) 
+                Thread.sleep(60.secondsToMillis())
             }
         }
     }

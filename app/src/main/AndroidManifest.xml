@@ -9,6 +9,9 @@
     <!-- to show notifications on device -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- do not sell app on google play to someone who doesn't have a device that supports bluetooth -->
+    <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"

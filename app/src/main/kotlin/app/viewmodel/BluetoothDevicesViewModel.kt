@@ -51,9 +51,9 @@ class BluetoothDevicesViewModel(
     private fun startObservingPairedBluetoothDevices() {
         viewModelScope.launch {
             bluetoothDevicesStore.observePairedDevices.collect { currentlyPairedDevices ->
-                if (currentlyPairedDevices.isEmpty()) return@collect // continue to use demo data until currently paired devices list is not empty
-
-                _pairedDevices.value = currentlyPairedDevices
+                currentlyPairedDevices?.let {
+                    _pairedDevices.value = it
+                }
             }
         }
     }

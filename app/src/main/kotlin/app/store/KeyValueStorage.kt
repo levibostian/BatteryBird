@@ -25,16 +25,16 @@ open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
     private val flowSharedPreferences: FlowSharedPreferences
         get() = FlowSharedPreferences(sharedPreferences)
 
-    var pairedBluetoothDevices: List<BluetoothDeviceModel>
+    var pairedBluetoothDevices: List<BluetoothDeviceModel>?
         set(newValue) {
             sharedPreferences.edit().putJson(Keys.PairedBluetoothDevices.name, newValue).commit()
         }
-        get() = sharedPreferences.getFromJson(Keys.PairedBluetoothDevices.name) ?: emptyList()
+        get() = sharedPreferences.getFromJson(Keys.PairedBluetoothDevices.name)
 
-    val observePairedBluetoothDevices: Flow<List<BluetoothDeviceModel>>
+    val observePairedBluetoothDevices: Flow<List<BluetoothDeviceModel>?>
         get() = flowSharedPreferences.getString(Keys.PairedBluetoothDevices.name, "").asFlow()
             .map { string ->
-                if (string.isBlank()) emptyList() else string.toObjectFromJsonString()
+                if (string.isBlank()) null else string.toObjectFromJsonString()
             }
 
     fun hasAskedForPermission(permission: RuntimePermission): Boolean = sharedPreferences.getBoolean("${Keys.HasNeverAskedForARuntimePermission.name}_${permission.string}", false)

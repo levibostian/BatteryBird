@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity() {
         onActivityResultPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             // user responded to permission request
             bluetoothDevicesViewModel.updateMissingPermissions(this) // get the next permission, if any
+            checkBluetoothDeviceBatteryLevels() // will get paired bluetooth devices immediately after accept bluetooth permission. Populates UI right away.
         }
 
         setContent {
@@ -103,16 +104,17 @@ class MainActivity : ComponentActivity() {
                 }
             })
         }
-
-        // Run Bluetooth worker when the app is opened so we can check the status of devices in case BroadcastReceiver did not get triggered.
-        // The worker should begin running a long-running task only if a device is currently connected.
-        DiGraph.instance.workManager.schedulePeriodicBluetoothDeviceBatteryCheck(this)
     }
 
     override fun onResume() {
         super.onResume()
 
         bluetoothDevicesViewModel.updateMissingPermissions(this)
+        checkBluetoothDeviceBatteryLevels()
+    }
+
+    private fun checkBluetoothDeviceBatteryLevels() {
+        DiGraph.instance.workManager.schedulePeriodicBluetoothDeviceBatteryCheck(this)
     }
 }
 

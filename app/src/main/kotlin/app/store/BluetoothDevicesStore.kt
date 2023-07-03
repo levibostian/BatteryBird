@@ -1,10 +1,10 @@
 package app.store
 
+import androidx.room.Dao
 import app.DiGraph
 import app.model.BluetoothDeviceModel
 import kotlinx.coroutines.flow.Flow
 
-// We want to store bluetooth devices to app storage so that we keep a history of devices. We can then display historical data in the app's UI.
 interface BluetoothDevicesStore {
     var pairedDevices: List<BluetoothDeviceModel>?
     val observePairedDevices: Flow<List<BluetoothDeviceModel>?>

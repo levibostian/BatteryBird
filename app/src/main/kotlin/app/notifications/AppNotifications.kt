@@ -12,9 +12,9 @@ import app.android.androidNotifications
 import app.android.setId
 import app.android.setTag
 import app.android.tag
-import app.model.BluetoothDevice
 import app.store.KeyValueStorage
 import app.store.keyValueStorage
+import earth.levi.batterybird.BluetoothDeviceModel
 
 val DiGraph.notifications: AppNotifications
     get() = AppNotifications(keyValueStorage, androidNotifications)
@@ -31,7 +31,7 @@ class AppNotifications(private val keyValueStorage: KeyValueStorage, private val
         setId(AndroidNotifications.Groups.DevicesBeingMonitored.ordinal)
     }.build(showAfterBuild = show)
 
-    fun getBatteryLowNotification(context: Context, device: BluetoothDevice, show: Boolean = false): Notification {
+    fun getBatteryLowNotification(context: Context, device: BluetoothDeviceModel, show: Boolean = false): Notification {
         val notificationBuilder = getNotificationBuilder(context, AndroidNotifications.Channels.LowBattery).apply {
             setContentTitle("${device.name} needs charged")
             setContentText("Battery level ${device.batteryLevel}%")
@@ -54,7 +54,7 @@ class AppNotifications(private val keyValueStorage: KeyValueStorage, private val
         return notificationBuilder.build(showAfterBuild = show)
     }
 
-    fun dismissBatteryLowNotification(context: Context, device: BluetoothDevice) {
+    fun dismissBatteryLowNotification(context: Context, device: BluetoothDeviceModel) {
         getBatteryLowNotification(context, device, show = false).let { androidNotifications.cancel(it.id, it.tag) }
 
         // reset memory of alert being sent so next time battery is low, we can reset

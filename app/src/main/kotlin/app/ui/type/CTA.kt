@@ -22,3 +22,12 @@ data class RuntimePermissionCTA(
         val sample = RuntimePermissionCTA(title = "Bluetooth permission required", description = "Want to view your devices in this app? App requires permission to bluetooth in order to do that. Accept bluetooth permission.", actionTitle = "Accept Bluetooth permission", permission = RuntimePermission.Bluetooth)
     }
 }
+
+data class ButtonCTA(
+    override val title: String,
+    override val description: String,
+    override val actionTitle: String
+) : CTA<String>() {
+    override val data: String
+        get() = ""
+}

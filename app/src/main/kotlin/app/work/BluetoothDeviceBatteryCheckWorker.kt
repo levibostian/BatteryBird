@@ -8,14 +8,17 @@ import androidx.work.WorkerParameters
 import app.DiGraph
 import app.android.bluetooth
 import app.android.id
+import app.extensions.isDebug
+import app.extensions.minutesToMillis
 import app.extensions.secondsToMillis
 import app.log.logger
-import app.model.BluetoothDeviceModel
 import app.notifications.notifications
 import app.store.bluetoothDevicesStore
+import earth.levi.batterybird.BluetoothDeviceModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+// Long-running worker that never stops that gets the battery level of the bluetooth device and shows a notification if the battery is low
 class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: WorkerParameters): CoroutineWorker(context, workerParameters) {
 
     private val bluetooth = DiGraph.instance.bluetooth
@@ -27,19 +30,18 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
         get() = bluetooth.getPairedDevices(applicationContext)
 
     override suspend fun doWork(): Result {
+        log.debug("worker started", this)
+
         if (!bluetooth.canGetPairedDevices(applicationContext)) {
             log.debug("cannot get bluetooth devices so quitting early", this)
             return Result.success()
         }
 
-        // This worker is a long-running worker that runs X number of minutes while the bluetooth device is connected.
-        // You call setForeground() to tell WorkManager that you are a long-running task.
+        // This worker is a long-running worker that doesn't stop running.
+        // You call setForeground() to tell WorkManager that you are a long-running task. It's required.
         val notificationForLongRunningJob = notifications.getBatteryMonitoringNotification(applicationContext)
         setForeground(ForegroundInfo(notificationForLongRunningJob.id, notificationForLongRunningJob))
 
-        // Now we can begin the work!
-        // Keep looping this function without returning
-        Thread.sleep(0.5.secondsToMillis()) // sometimes bluetooth device battery info isn't available right away. sleep to give OS a second to finish connecting to bluetooth device
         checkBatteryLevels()
 
         log.debug("worker done. Returning result.", this)
@@ -48,18 +50,26 @@ class BluetoothDeviceBatteryCheckWorker(context: Context, workerParameters: Work
 
     @SuppressLint("MissingPermission") // we are not checking for bluetooth permission in this function, we do that in another class
     private suspend fun checkBatteryLevels() = withContext(Dispatchers.IO) {
-        val pairedBluetoothDevices = pairedBluetoothDevices.getOrDefault(emptyList()) // using default value as an easy way to handle scenario where bluetooth permission revoked from settings. Keeps code running without throwing exception
+        while (true) { // never stop running worker. only done when worker is cancelled
+            log.debug("checking battery levels of devices", this@BluetoothDeviceBatteryCheckWorker)
 
-        bluetoothDevicesStore.pairedDevices = pairedBluetoothDevices
+            val pairedBluetoothDevices = pairedBluetoothDevices.getOrDefault(emptyList()) // using default value as an easy way to handle scenario where bluetooth permission revoked from settings. Keeps code running without throwing exception
 
-        pairedBluetoothDevices.forEach { bluetoothDevice ->
-            if (bluetoothDevice.batteryLevel <= 20) {
-                notifications.getBatteryLowNotification(applicationContext, bluetoothDevice, show = true)
-            } else {
-                notifications.dismissBatteryLowNotification(applicationContext, bluetoothDevice)
+            bluetoothDevicesStore.pairedDevices = pairedBluetoothDevices
+
+            pairedBluetoothDevices.forEach { bluetoothDevice ->
+                bluetoothDevice.batteryLevel?.let { batteryLevel ->
+                    if (batteryLevel <= 20) {
+                        notifications.getBatteryLowNotification(applicationContext, bluetoothDevice, show = true)
+                    } else {
+                        notifications.dismissBatteryLowNotification(applicationContext, bluetoothDevice)
+                    }
+                }
             }
-        }
 
-        Thread.sleep(90.secondsToMillis())
+            val timeBetweenChecks = if (isDebug) 5.secondsToMillis() else 3.minutesToMillis()
+
+            Thread.sleep(timeBetweenChecks)
+        }
     }
 }

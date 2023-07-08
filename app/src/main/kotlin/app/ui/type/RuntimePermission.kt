@@ -12,8 +12,12 @@ sealed class RuntimePermission {
     abstract val doesDeviceRequirePermission: Boolean // Specify what api level the runtime permission was introduced. We do not ask for permission if we don't have to.
 
     object Bluetooth : RuntimePermission() {
-        override val doesDeviceRequirePermission: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-        @SuppressLint("InlinedApi") override val string: String = Manifest.permission.BLUETOOTH_CONNECT
+        override val doesDeviceRequirePermission: Boolean = true
+        override val string: String
+            get() {
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Manifest.permission.BLUETOOTH_CONNECT // added in SDK 31
+                else Manifest.permission.BLUETOOTH // legacy permission
+            }
     }
 
     object Notifications: RuntimePermission() {

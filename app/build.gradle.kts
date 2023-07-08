@@ -63,7 +63,8 @@ android {
         buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        // This maps to kotlin compiler version https://developer.android.com/jetpack/androidx/releases/compose-kotlin
+        kotlinCompilerExtensionVersion = "1.4.8"
     }
     packagingOptions {
         resources {
@@ -83,6 +84,8 @@ android {
 }
 
 dependencies {
+    implementation(project(mapOf("path" to ":store")))
+
     // Compose
     val composeBom = platform("androidx.compose:compose-bom:[2023.04.01,)")
     implementation(composeBom)
@@ -104,15 +107,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:[0.4.0,)")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:[2.0.3,)")
 
-    // Coroutine support for Shared Prefs
-    implementation("com.fredporciuncula:flow-preferences:[1.9.1,)")
-
-    // Room DB
-    val roomVersion = "[2.5.2,)"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-
     // AndroidX
     implementation("androidx.core:core-ktx:[1.7,1.12)") // 1.12 requires target API 34. Update when 34 becomes stable
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
@@ -121,9 +115,6 @@ dependencies {
     // WorkManager 
     implementation("androidx.work:work-runtime-ktx:[2.8,)")
     testImplementation("androidx.work:work-testing:[2.8,)")
-
-    // Kotlinx
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:[1.5,)")
 
     // junit, espresso, etc for testing
     testImplementation("junit:junit:[4.13,)")

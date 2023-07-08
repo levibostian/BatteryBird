@@ -6,15 +6,17 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import app.DiGraph
 import app.extensions.now
-import app.model.BluetoothDeviceModel
 import app.model.samples.Samples
 import app.model.samples.bluetoothDeviceModels
 import app.ui.type.RuntimePermission
+import earth.levi.batterybird.BluetoothDeviceModel
 
 interface Bluetooth: AndroidFeature {
     fun canGetPairedDevices(context: Context): Boolean
     // Gets list of paired devices (or empty list if none), or Error if permissions not yet accepted
     fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>>
+    // if system bluetooth is on or not
+    val isBluetoothOn: Boolean
 }
 
 val DiGraph.bluetoothAdapter: BluetoothAdapter
@@ -29,23 +31,28 @@ open class BluetoothImpl: AndroidFeatureImpl(), Bluetooth {
     // we have done checks such as getting permission.
     private val systemBluetoothAdapter by lazy { DiGraph.instance.bluetoothAdapter }
 
-    override fun canGetPairedDevices(context: Context): Boolean = isPermissionGranted(RuntimePermission.Bluetooth, context)
+    override fun canGetPairedDevices(context: Context): Boolean = areAllPermissionsGranted(context)
 
     @SuppressLint("MissingPermission") // we check if permission granted inside of the function.
     override fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>> {
         if (!canGetPairedDevices(context)) return Result.failure(BluetoothPermissionsNotAccepted())
 
-        return Result.success(systemBluetoothAdapter.bondedDevices.toList().mapNotNull { pairedDevice ->
-            val batteryLevelOfDevice = pairedDevice.batteryLevel ?: return@mapNotNull null // if Android OS doesn't give a battery level, we don't care about that device. Ignore it. // TODO: dont ignore anymore. that might require a migration to data store though
+        // Note: If bluetooth is off on device, bondedDevices will return empty list.
+        return Result.success(systemBluetoothAdapter.bondedDevices.toList().map { pairedDevice ->
+            val isDeviceConnected = pairedDevice.batteryLevel != null
 
             BluetoothDeviceModel(
                 hardwareAddress = pairedDevice.address,
                 name = pairedDevice.name,
-                batteryLevel = batteryLevelOfDevice,
-                lastTimeConnected = now()
+                batteryLevel = pairedDevice.batteryLevel?.toLong(),
+                isConnected = isDeviceConnected,
+                lastTimeConnected = if (isDeviceConnected) now() else null
             )
         })
     }
+
+    override val isBluetoothOn: Boolean
+        get() = systemBluetoothAdapter.isEnabled
 
     override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Bluetooth)
 }

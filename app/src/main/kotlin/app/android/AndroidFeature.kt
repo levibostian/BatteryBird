@@ -19,4 +19,8 @@ abstract class AndroidFeatureImpl: AndroidFeature {
         return ContextCompat.checkSelfPermission(context, permission.string) == PackageManager.PERMISSION_GRANTED
     }
 
+    fun areAllPermissionsGranted(context: Context, permissions: List<RuntimePermission> = getRequiredPermissions()): Boolean {
+        return permissions.all { isPermissionGranted(it, context) }
+    }
+
 }

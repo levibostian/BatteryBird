@@ -1,0 +1,27 @@
+import kotlinx.datetime.Instant;
+import kotlin.Boolean;
+
+CREATE TABLE BluetoothDeviceModel (
+  hardwareAddress TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  batteryLevel INTEGER,
+  isConnected INTEGER AS Boolean NOT NULL DEFAULT 0, --- default false
+  lastTimeConnected TEXT AS Instant
+);
+
+getAll:
+SELECT * FROM BluetoothDeviceModel;
+
+-- When device is not conneted, battery level and last time connected are null.
+-- However, we want to preserve those non-null vales from *the last time* the device *was* connected.
+-- So we use COALESCE to preserve the non-null values from the previous insert/update.
+insertOrReplace:
+INSERT INTO BluetoothDeviceModel (hardwareAddress, name, batteryLevel, isConnected, lastTimeConnected)
+VALUES (:hardwareAddress, :name, :batteryLevel, :isConnected, :lastTimeConnected)
+ON CONFLICT(hardwareAddress) DO UPDATE SET
+    isConnected = :isConnected,
+    batteryLevel = COALESCE(:batteryLevel, batteryLevel),
+    lastTimeConnected = COALESCE(:lastTimeConnected, lastTimeConnected);
+
+deleteAll:
+DELETE FROM BluetoothDeviceModel;

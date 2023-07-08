@@ -9,13 +9,14 @@ import app.android.WorkManager
 import app.android.bluetooth
 import app.android.androidNotifications
 import app.android.workManager
-import app.model.BluetoothDevice
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
 import app.store.BluetoothDevicesStore
 import app.store.KeyValueStorage
 import app.store.bluetoothDevicesStore
 import app.store.keyValueStorage
+import earth.levi.batterybird.BluetoothDeviceModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -33,8 +34,12 @@ class BluetoothDevicesViewModel(
 
     // Set demo data so the app has something to show in the UI
     private var _pairedDevices = MutableStateFlow(Samples.bluetoothDevices)
+    private var _isDemoMode = MutableStateFlow(true)
 
-    val observePairedDevices: StateFlow<List<BluetoothDevice>>
+    val isDemoMode: StateFlow<Boolean>
+        get() = _isDemoMode
+
+    val observePairedDevices: StateFlow<List<BluetoothDeviceModel>>
         get() = _pairedDevices
 
     init {
@@ -49,11 +54,10 @@ class BluetoothDevicesViewModel(
     }
 
     private fun startObservingPairedBluetoothDevices() {
-        viewModelScope.launch {
-            bluetoothDevicesStore.observePairedDevices.collect { currentlyPairedDevices ->
-                if (currentlyPairedDevices.isEmpty()) return@collect // continue to use demo data until currently paired devices list is not empty
-
-                _pairedDevices.value = currentlyPairedDevices
+        viewModelScope.launch(Dispatchers.IO) {
+            bluetoothDevicesStore.observePairedDevices.collect { pairedDevices ->
+                _pairedDevices.value = pairedDevices.ifEmpty { Samples.bluetoothDevices }
+                _isDemoMode.value = pairedDevices.isEmpty()
             }
         }
     }

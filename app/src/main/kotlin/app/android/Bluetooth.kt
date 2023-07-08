@@ -6,13 +6,17 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import app.DiGraph
 import app.extensions.now
-import app.model.BluetoothDeviceModel
 import app.model.samples.Samples
 import app.model.samples.bluetoothDeviceModels
 import app.ui.type.RuntimePermission
+import earth.levi.batterybird.BluetoothDeviceModel
 
 interface Bluetooth: AndroidFeature {
-    fun getPairedDevices(context: Context): List<BluetoothDeviceModel>
+    fun canGetPairedDevices(context: Context): Boolean
+    // Gets list of paired devices (or empty list if none), or Error if permissions not yet accepted
+    fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>>
+    // if system bluetooth is on or not
+    val isBluetoothOn: Boolean
 }
 
 val DiGraph.bluetoothAdapter: BluetoothAdapter
@@ -27,21 +31,28 @@ open class BluetoothImpl: AndroidFeatureImpl(), Bluetooth {
     // we have done checks such as getting permission.
     private val systemBluetoothAdapter by lazy { DiGraph.instance.bluetoothAdapter }
 
-    @SuppressLint("MissingPermission") // we check if permission granted inside of the function.
-    override fun getPairedDevices(context: Context): List<BluetoothDeviceModel> {
-        if (!isPermissionGranted(RuntimePermission.Bluetooth, context)) return emptyList()
+    override fun canGetPairedDevices(context: Context): Boolean = areAllPermissionsGranted(context)
 
-        return systemBluetoothAdapter.bondedDevices.toList().mapNotNull { pairedDevice ->
-            val batteryLevelOfDevice = pairedDevice.batteryLevel ?: return@mapNotNull null // if Android OS doesn't give a battery level, we don't care about that device. Ignore it.
+    @SuppressLint("MissingPermission") // we check if permission granted inside of the function.
+    override fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>> {
+        if (!canGetPairedDevices(context)) return Result.failure(BluetoothPermissionsNotAccepted())
+
+        // Note: If bluetooth is off on device, bondedDevices will return empty list.
+        return Result.success(systemBluetoothAdapter.bondedDevices.toList().map { pairedDevice ->
+            val isDeviceConnected = pairedDevice.batteryLevel != null
 
             BluetoothDeviceModel(
                 hardwareAddress = pairedDevice.address,
                 name = pairedDevice.name,
-                batteryLevel = batteryLevelOfDevice,
-                lastTimeConnected = now()
+                batteryLevel = pairedDevice.batteryLevel?.toLong(),
+                isConnected = isDeviceConnected,
+                lastTimeConnected = if (isDeviceConnected) now() else null
             )
-        }
+        })
     }
+
+    override val isBluetoothOn: Boolean
+        get() = systemBluetoothAdapter.isEnabled
 
     override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Bluetooth)
 }
@@ -53,7 +64,9 @@ class BluetoothSamplesStub: BluetoothImpl() {
 
     var samplePairedDevices: List<BluetoothDeviceModel> = Samples.bluetoothDeviceModels
 
-    override fun getPairedDevices(context: Context): List<BluetoothDeviceModel> = samplePairedDevices
+    override fun canGetPairedDevices(context: Context): Boolean = true
+
+    override fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>> = Result.success(samplePairedDevices)
 
 }
 
@@ -64,3 +77,5 @@ val BluetoothDevice.batteryLevel: Int?
         if (level < 0) return null
         return level
     }
+
+class BluetoothPermissionsNotAccepted: Throwable()

@@ -4,4 +4,5 @@ tasks:
   update-lock-versions:
     cmds:
       - ./gradlew :app:dependencies --write-locks
+      - ./gradlew :store:dependencies --write-locks
       - ./gradlew dependencies --write-locks

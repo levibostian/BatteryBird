@@ -1,3 +1,5 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
 pluginManagement {
     repositories {
         google()
@@ -6,11 +8,13 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT) // I want to use PREFER_SETTINGS so this file is preferred, but kotlin multiplatform plugins add their own repositories and the repositories get ignored if I don't use PREFER_PROJECT.
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 rootProject.name = "Bluetooth Battery Alert"
 include ':app'
+include ':store'

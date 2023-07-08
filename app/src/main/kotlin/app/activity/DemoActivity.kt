@@ -16,13 +16,9 @@ class DemoActivity: Activity() {
         intent?.data?.let { deepLink -> handleDeepLink(deepLink) }
     }
 
-    // batterybird://demo?show_low_battery_notification=true
+    // batterybird://demo
     private fun handleDeepLink(deepLink: Uri) {
         DiGraph.instance.override(Bluetooth::class.java, DiGraph.instance.bluetoothStub)
-
-        if (deepLink.getQueryParameter("show_low_battery_notification") != null) {
-            DiGraph.instance.workManager.runBluetoothDeviceBatteryCheck(this)
-        }
 
         startActivity(MainActivity.getIntent(this))
         finish()

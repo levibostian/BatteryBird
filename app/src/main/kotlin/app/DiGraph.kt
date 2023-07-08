@@ -9,11 +9,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import earth.levi.batterybird.store.Database
+import earth.levi.batterybird.store.DatabaseStore
+import earth.levi.batterybird.store.DriverFactory
+import earth.levi.batterybird.store.createDatabase
 
 class DiGraph(
     val bluetoothManager: BluetoothManager,
     val notificationManager: NotificationManager,
-    val sharedPreferences: SharedPreferences
+    val sharedPreferences: SharedPreferences,
+    val database: DatabaseStore
 ) {
     companion object {
         lateinit var instance: DiGraph
@@ -22,7 +27,8 @@ class DiGraph(
             instance = DiGraph(
                 bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager,
                 notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager,
-                sharedPreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE)
+                sharedPreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE),
+                database = DatabaseStore(createDatabase(DriverFactory(context)))
             )
         }
     }

@@ -19,3 +19,23 @@ jobs:
         fail_on_failure: true 
         require_tests: true 
         check_name: "Unit test results"
+
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/setup-android
+
+    - name: Create production Android keystore file 
+      uses: levibostian/action-random-file@main
+      id: create-keystore-file
+      with:
+        base64-file-content: ${{ secrets.ANDROID_RELEASE_SIGNING_KEY_FILE_BASE64 }}
+        file-name: "key"
+
+    - run: ./gradlew :app:bundleRelease 
+      env:
+        ANDROID_SIGNING_KEY_FILE_PATH: ${{ steps.create-keystore-file.outputs.path }}
+        ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+    

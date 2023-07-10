@@ -30,6 +30,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,12 +48,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.isDebugInspectorInfoEnabled
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import app.DiGraph
 import app.android.bluetooth
 import app.android.workManager
@@ -72,6 +77,8 @@ import app.ui.type.AnyCTA
 import app.ui.type.ButtonCTA
 import app.ui.type.RuntimePermission
 import app.ui.type.RuntimePermissionCTA
+import app.ui.widgets.ClickableText
+import app.viewModel
 import app.viewModelDiGraph
 import app.viewmodel.BluetoothDevicesViewModel
 import app.viewmodel.bluetoothDevicesViewModel
@@ -84,7 +91,7 @@ class MainActivity : ComponentActivity() {
         fun getIntent(context: Context) = Intent(context, MainActivity::class.java)
     }
 
-    private val bluetoothDevicesViewModel by viewModelDiGraph { DiGraph.instance.bluetoothDevicesViewModel }
+    private val bluetoothDevicesViewModel by viewModelDiGraph { bluetoothDevicesViewModel }
     private val workManager by lazy { DiGraph.instance.workManager }
 
     private lateinit var onActivityResultPermission: ActivityResultLauncher<String>
@@ -98,11 +105,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MainActivityComposable(bluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick = {
-                startActivity(systemBluetoothSettingsIntent())
-            }, contactUsOnClick = {
-                startActivity(supportEmailIntent())
-            }, setupCtaOnClick = { ctaClicked ->
+            MainActivityComposable(setupCtaOnClick = { ctaClicked ->
                 when (ctaClicked) {
                     is RuntimePermissionCTA -> {
                         bluetoothDevicesViewModel.hasAskedForPermission(this, ctaClicked.permission)
@@ -124,10 +127,22 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
+// TODO: I am trying to navigate to new add device screen using jetpack compose navigation.
+// 1. Convert MainActiivtyComposable into DevicesScreen. This means I am decoupling the screen from the activity.
+// 2. use App inside of Navigation.kt in this app. I need to have that installed in MainActiivty so the first screen gets launched
+// 3. finish the navigation part for navigationg to add device.
+
+
+
 @Composable
-fun MainActivityComposable(bluetoothDevicesViewModel: BluetoothDevicesViewModel, toolbarBluetoothSettingsOnClick: () -> Unit, contactUsOnClick: () -> Unit, setupCtaOnClick: (AnyCTA) -> Unit) {
+fun MainActivityComposable(setupCtaOnClick: (AnyCTA) -> Unit) {
+    val bluetoothDevicesViewModel = DiGraph.instance.viewModel { bluetoothDevicesViewModel }
+
     val bluetoothDevices = bluetoothDevicesViewModel.observePairedDevices.collectAsState()
     val isDemoMode = bluetoothDevicesViewModel.isDemoMode.collectAsState()
+    val context = LocalContext.current
 
     val missingPermissionCtas = bluetoothDevicesViewModel.observeMissingPermissions.collectAsState().value.map { missingPermission ->
         RuntimePermissionCTA(
@@ -152,9 +167,18 @@ fun MainActivityComposable(bluetoothDevicesViewModel: BluetoothDevicesViewModel,
         isDemoMode = isDemoMode.value,
         setupCTAs = missingPermissionCtas,
         setupCtaOnClick,
-        toolbarBluetoothSettingsOnClick,
-        contactUsOnClick
+        toolbarBluetoothSettingsOnClick = {
+            context.startActivity(systemBluetoothSettingsIntent())
+        },
+        contactUsOnClick = {
+            context.startActivity(supportEmailIntent())
+        }
     )
+}
+
+@Composable
+fun DevicesRoute(onAddDeviceClicked: () -> Unit) {
+
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -196,32 +220,46 @@ fun MainActivityScreen(
     }
 }
 
-// TODO: add a tip banner to top of screen when systen bluetooth is off.
-// i can then make some views like empty view more helpful depending on if it's off or on.
-// but, I will need to observe this. so, observe in viewmodel
-
 @Composable
 fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMode: Boolean) {
-    LazyColumn {
-        items(bluetoothDevices, key = { it.hardwareAddress }) {
-            Row(Modifier.padding(10.dp)) {
-                BluetoothBatteryProgressBar(it.batteryLevel, modifier = Modifier
-                    .fillMaxHeight()
-                    .align(Alignment.CenterVertically)
-                    .padding(end = 10.dp))
+    Column {
+        LazyColumn {
+            items(bluetoothDevices, key = { it.hardwareAddress }) {
+                Row(Modifier.padding(10.dp)) {
+                    BluetoothBatteryProgressBar(it.batteryLevel, modifier = Modifier
+                        .fillMaxHeight()
+                        .align(Alignment.CenterVertically)
+                        .padding(end = 10.dp))
 
-                Column {
-                    Row {
-                        Text(text = it.name)
-                        IsDemoView(isDemo = isDemoMode, modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .padding(start = 6.dp))
+                    Column {
+                        Row {
+                            Text(text = it.name)
+                            IsDemoView(isDemo = isDemoMode, modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(start = 6.dp))
+                        }
+
+                        DeviceLastConnectedText(it)
                     }
-
-                    DeviceLastConnectedText(it)
                 }
             }
         }
+
+        ManuallyAddDeviceView(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 30.dp)) {
+            // TODO: implement
+        }
+    }
+}
+
+@Composable
+fun ManuallyAddDeviceView(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth()) {
+        ClickableText(
+            modifier
+                .fillMaxWidth()
+                .align(Alignment.Center), textAlign = TextAlign.Center, text = "+ Add device", color = Color.DarkGray, onClick = onClick)
     }
 }
 

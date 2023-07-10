@@ -86,31 +86,25 @@ android {
 dependencies {
     implementation(project(mapOf("path" to ":store")))
 
+    // AndroidX
+    //implementation("androidx.core:core-ktx:[1.7,1.12)") // 1.12 requires target API 34. Update when 34 becomes stable
+    //implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
+
     // Compose
-    val composeBom = platform("androidx.compose:compose-bom:[2023.04.01,)")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
-    // Compose: UI framework
-    implementation("androidx.compose.material3:material3")
-    // Compose: Android Studio Preview support
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation("androidx.navigation:navigation-compose:2.6.0")
+    implementation("androidx.compose.material3:material3:1.1.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.3") // Compose: Android Studio Preview support
+    debugImplementation("androidx.compose.ui:ui-tooling:1.4.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1") // Compose: Optional - Integration with ViewModels
     // Compose: UI Tests
     //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     //debugImplementation("androidx.compose.ui:ui-test-manifest")
     // Copose: Optional - Integration with activities
-    //implementation("androidx.activity:activity-compose:1.6.1")
-    // Compose: Optional - Integration with ViewModels
-    // implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
+    //implementation("androidx.activity:activity-compose")
 
     // Kotlin datetime util
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:[0.4.0,)")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:[2.0.3,)")
-
-    // AndroidX
-    implementation("androidx.core:core-ktx:[1.7,1.12)") // 1.12 requires target API 34. Update when 34 becomes stable
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
-    implementation("androidx.activity:activity-compose:[1.7,1.8)") // 1.8 requires target API 34
 
     // WorkManager 
     implementation("androidx.work:work-runtime-ktx:[2.8,)")

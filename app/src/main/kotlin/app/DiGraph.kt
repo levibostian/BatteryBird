@@ -7,6 +7,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import earth.levi.batterybird.store.Database
@@ -43,14 +44,27 @@ class DiGraph(
 }
 
 inline fun <reified VM : ViewModel> ComponentActivity.viewModelDiGraph(
-    noinline createInstance: (() -> VM)
+    noinline createInstance: (DiGraph.() -> VM)
 ): Lazy<VM> {
     return viewModels {
         object : ViewModelProvider.Factory {
             override fun <T: ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return createInstance() as T
+                return createInstance(DiGraph.instance) as T
             }
         }
     }
+}
+
+// Composable version of viewModel() to construct instances of ViewModels inside of @Composable functions (such as Screens).
+// It finds the nearest lifecycle owner and creates a ViewModel scoped to that lifecycle. You can provide a lifecycle owner.
+// Depends on androidx.lifecycle:lifecycle-viewmodel-compose
+@Composable
+inline fun <reified VM : ViewModel> DiGraph.viewModel(
+    noinline createInstance: (DiGraph.() -> VM)
+): VM {
+    // see viewModelStoreOwner parameter in androidx.lifecycle.viewmodel.compose.viewModel for more info on overriding the lifecycle owner
+    return androidx.lifecycle.viewmodel.compose.viewModel(initializer = {
+        createInstance()
+    })
 }

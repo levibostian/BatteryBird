@@ -91,35 +91,31 @@ dependencies {
     //implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
 
     // Compose
-    implementation("androidx.navigation:navigation-compose:2.6.0")
-    implementation("androidx.compose.material3:material3:1.1.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.3") // Compose: Android Studio Preview support
-    debugImplementation("androidx.compose.ui:ui-tooling:1.4.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1") // Compose: Optional - Integration with ViewModels
+    implementation("androidx.navigation:navigation-compose:+")
+    implementation("androidx.compose.material3:material3:+")
+    implementation("androidx.compose.ui:ui-tooling-preview:+") // Compose: Android Studio Preview support
+    debugImplementation("androidx.compose.ui:ui-tooling:+")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:+") // Compose: Optional - Integration with ViewModels
     // Compose: UI Tests
     //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     //debugImplementation("androidx.compose.ui:ui-test-manifest")
     // Copose: Optional - Integration with activities
-    //implementation("androidx.activity:activity-compose")
 
     // Kotlin datetime util
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:[0.4.0,)")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:[2.0.3,)")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:+")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:+")
 
-    // WorkManager 
-    implementation("androidx.work:work-runtime-ktx:[2.8,)")
-    testImplementation("androidx.work:work-testing:[2.8,)")
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:+")
+    testImplementation("androidx.work:work-testing:+")
 
     // junit, espresso, etc for testing
-    testImplementation("junit:junit:[4.13,)")
-    testImplementation("androidx.test.ext:junit:[1.1,)")
-    testImplementation("org.robolectric:robolectric:[4.5.1,)")
-    testImplementation("androidx.test:core:[1.5.0,)")
-    testImplementation("androidx.test:runner:[1.5.2,)")
-    testImplementation("androidx.test:rules:[1.5.0,)")
+    testImplementation("junit:junit:+")
+    testImplementation("androidx.test.ext:junit:+")
+    testImplementation("org.robolectric:robolectric:+")
+    testImplementation("androidx.test:core:+")
+    testImplementation("androidx.test:runner:+")
+    testImplementation("androidx.test:rules:+")
     testImplementation(kotlin("test")) // kotlin test assertions
-    testImplementation("io.mockk:mockk:[1.12.0,)")
+    testImplementation("io.mockk:mockk:+")
 }
-
-// enables dependency locking for dependencies
-dependencyLocking { lockAllConfigurations() }

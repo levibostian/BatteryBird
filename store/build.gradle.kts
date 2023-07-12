@@ -30,9 +30,9 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:[0.4.0,)")
-                implementation("app.cash.sqldelight:coroutines-extensions:[2.0.0-rc02,)")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.7.1,)") // required by sqldelight coroutines-extensions
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:+")
+                implementation("app.cash.sqldelight:coroutines-extensions:+")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:+") // required by sqldelight coroutines-extensions
             }
         }
         val commonTest by getting {
@@ -42,7 +42,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                implementation("app.cash.sqldelight:android-driver:[2.0.0-rc02,)")
+                implementation("app.cash.sqldelight:android-driver:+")
             }
         }
         val androidTest by getting
@@ -56,7 +56,7 @@ kotlin {
             iosSimulatorArm64Main.dependsOn(this)
 
             dependencies {
-                implementation("app.cash.sqldelight:native-driver:[2.0.0-rc02,)")
+                implementation("app.cash.sqldelight:native-driver:+")
             }
         }
         val iosX64Test by getting
@@ -86,10 +86,7 @@ sqldelight {
             // define what version of sqlite to enable some features of sqldelight: https://github.com/cashapp/sqldelight/issues/1436
             // find version of sqlite can use for Android: https://developer.android.com/reference/android/database/sqlite/package-summary
             // for ios: https://stackoverflow.com/questions/14288128/what-version-of-sqlite-does-ios-provide
-            dialect("app.cash.sqldelight:sqlite-3-24-dialect:[2.0.0-rc02,)")
+            dialect("app.cash.sqldelight:sqlite-3-24-dialect:+")
         }
     }
 }
-
-// enables dependency locking for dependencies
-dependencyLocking { lockAllConfigurations() }

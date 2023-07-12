@@ -1,13 +1,32 @@
 // Dependency version locking. Tries to make builds more reliable to be reproducible, and allow automatic upgrades easily.
 // Learn more: https://github.com/peter-evans/gradle-auto-dependency-updates
-dependencyLocking { lockAllConfigurations() }
 
 buildscript {
     configurations.classpath {
-        // part of dependency locking. allows locking plugins.
-        resolutionStrategy.activateDependencyLocking()
+        resolutionStrategy.activateDependencyLocking() // part of dependency locking. allows locking for buildscript.
     }
 }
+
+allprojects {
+    dependencyLocking { lockAllConfigurations() } // enables dependency locking for all modules in the project. Except for buildscript dependencies.
+
+    configurations.all {
+        resolutionStrategy {
+            // Filters dependency versions based on criteria.
+            // Called a Component Selection Rule: https://docs.gradle.org/current/userguide/dynamic_versions.html#sec:component_selection_rules
+            componentSelection {
+                all {
+                    // We want stable (or release candidate), only.
+                    // You can make exclusions if you want by adding conditionals for candidate group, name, version, etc.
+                    if (candidate.version.contains("-alpha") || candidate.version.contains("-beta")) {
+                        reject("version contains alpha or beta") // version is determiend by the highest version not rejected.
+                    }
+                }
+            }
+        }
+    }
+}
+
 plugins {
     // android gradle plugin has a limit to what is supported by IDE. 
     // https://developer.android.com/studio/releases#android_gradle_plugin_and_android_studio_compatibility
@@ -21,5 +40,5 @@ plugins {
     kotlin("plugin.serialization").version(kotlinVersion).apply(false)
     kotlin("multiplatform").version(kotlinVersion).apply(false)
     kotlin("native.cocoapods").version(kotlinVersion).apply(false)
-    id("app.cash.sqldelight").version("[2.0.0-rc02,)").apply(false)
+    id("app.cash.sqldelight").version("+").apply(false)
 }

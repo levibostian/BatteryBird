@@ -86,20 +86,16 @@ android {
 dependencies {
     implementation(project(mapOf("path" to ":store")))
 
-    // AndroidX
-    //implementation("androidx.core:core-ktx:[1.7,1.12)") // 1.12 requires target API 34. Update when 34 becomes stable
-    //implementation("androidx.lifecycle:lifecycle-runtime-ktx:[2.6,)")
-
     // Compose
     implementation("androidx.navigation:navigation-compose:+")
     implementation("androidx.compose.material3:material3:+")
     implementation("androidx.compose.ui:ui-tooling-preview:+") // Compose: Android Studio Preview support
     debugImplementation("androidx.compose.ui:ui-tooling:+")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:+") // Compose: Optional - Integration with ViewModels
+    implementation("androidx.activity:activity-compose:+")
     // Compose: UI Tests
     //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     //debugImplementation("androidx.compose.ui:ui-test-manifest")
-    // Copose: Optional - Integration with activities
 
     // Kotlin datetime util
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:+")

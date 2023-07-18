@@ -1,6 +1,9 @@
 package app.ui
 
 import android.content.Intent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -16,8 +19,14 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.unit.dp
+import app.DiGraph
 import app.ui.screens.AddDevice
 import app.ui.screens.DevicesList
+import app.ui.widgets.TopAppBar
+import app.viewModelFromActivity
+import app.viewmodel.BluetoothDevicesViewModel
+import app.viewmodel.bluetoothDevicesViewModel
 
 sealed class Screen(val route: String) {
     object Devices : Screen("devices")
@@ -59,6 +68,21 @@ internal fun NavGraphBuilder.addAddDeviceRoute(
     composable(
         route = Screen.AddDevice.route
     ) {
-        AddDevice(navigation = navController)
+        // This pattern of having part of the View here instead of inside AddDevice is to make
+        // @Preview work. Make AddDevice() not take in a ViewModel instance so @Preview doesn't need to provide a ViewModel override/stub.
+        Scaffold(
+            topBar = { TopAppBar("Add device", navController) },
+        ) { contentPadding ->
+
+            Box(Modifier.padding(contentPadding.calculateTopPadding())) {
+                val bluetoothDevicesViewModel: BluetoothDevicesViewModel = viewModelFromActivity()
+
+                AddDevice(modifier = Modifier.padding(top = 20.dp), onAddDevice = { hardwareAddress ->
+                    bluetoothDevicesViewModel.manuallyAddBluetoothDevice(hardwareAddress)
+
+                    navController.navigateUp()
+                })
+            }
+        }
     }
 }

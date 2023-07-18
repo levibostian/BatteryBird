@@ -9,6 +9,8 @@ import app.android.WorkManager
 import app.android.bluetooth
 import app.android.androidNotifications
 import app.android.workManager
+import app.extensions.now
+import app.extensions.toRelativeTimeSpanString
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
 import app.store.BluetoothDevicesStore
@@ -20,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 
 val DiGraph.bluetoothDevicesViewModel: BluetoothDevicesViewModel
     get() = BluetoothDevicesViewModel(bluetoothDevicesStore, workManager, keyValueStorage, bluetooth, androidNotifications)
@@ -51,6 +54,20 @@ class BluetoothDevicesViewModel(
 
         // Because the user might have just accepted the bluetooth connect permission, let's run the worker so we can show bluetooth devices in the UI right away.
         workManager.runBluetoothDeviceBatteryCheck(activity)
+    }
+
+    fun manuallyAddBluetoothDevice(hardwareAddress: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val model = BluetoothDeviceModel(
+                hardwareAddress = hardwareAddress,
+                name = "Added device, $hardwareAddress",
+                isConnected = false,
+                batteryLevel = null,
+                lastTimeConnected = null
+            )
+
+            bluetoothDevicesStore.manuallyAddDevice(model)
+        }
     }
 
     private fun startObservingPairedBluetoothDevices() {

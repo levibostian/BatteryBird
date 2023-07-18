@@ -15,3 +15,6 @@ val BatteryLevelMedium = Color(0xFFF17300)
 val BatteryLevelLow = Color(0xFF92140C)
 val BatteryLevelTrackLight = Color(0xFFCCCCCC)
 val BatteryLevelTrackDark = Color(0xFF494949)
+
+// UI elements
+val ErrorMessageColor = Color(0xFFF17300)

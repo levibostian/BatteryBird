@@ -81,8 +81,8 @@ import app.ui.type.ButtonCTA
 import app.ui.type.RuntimePermission
 import app.ui.type.RuntimePermissionCTA
 import app.ui.widgets.ClickableText
-import app.viewModel
 import app.viewModelDiGraph
+import app.viewModelFromActivity
 import app.viewmodel.BluetoothDevicesViewModel
 import app.viewmodel.bluetoothDevicesViewModel
 import earth.levi.batterybird.BluetoothDeviceModel
@@ -90,7 +90,7 @@ import kotlinx.datetime.Instant
 
 @Composable
 fun DevicesList(onAddDeviceClicked: () -> Unit) {
-    val bluetoothDevicesViewModel = DiGraph.instance.viewModel { bluetoothDevicesViewModel }
+    val bluetoothDevicesViewModel: BluetoothDevicesViewModel = viewModelFromActivity()
 
     val bluetoothDevices = bluetoothDevicesViewModel.observePairedDevices.collectAsState()
     val isDemoMode = bluetoothDevicesViewModel.isDemoMode.collectAsState()
@@ -202,10 +202,12 @@ fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMod
             }
         }
 
-        ManuallyAddDeviceView(modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 30.dp)) {
-            onAddDeviceClicked()
+        if (!isDemoMode) { // to not allow someone to add a device until bluetooth is enabled
+            ManuallyAddDeviceView(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 30.dp)) {
+                onAddDeviceClicked()
+            }
         }
     }
 }

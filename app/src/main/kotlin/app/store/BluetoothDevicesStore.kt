@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.emptyFlow
 interface BluetoothDevicesStore {
     var pairedDevices: List<BluetoothDeviceModel>
     val observePairedDevices: Flow<List<BluetoothDeviceModel>>
+    fun manuallyAddDevice(bluetoothDevice: BluetoothDeviceModel)
 }
 
 val DiGraph.bluetoothDevicesStore: BluetoothDevicesStore
@@ -28,6 +29,10 @@ class BluetoothDevicesStoreImpl(private val database: DatabaseStore): BluetoothD
                 database.bluetoothDevices = newValue
             }
         }
+
+    override fun manuallyAddDevice(bluetoothDevice: BluetoothDeviceModel) {
+        database.bluetoothDevices = database.bluetoothDevices + bluetoothDevice
+    }
 
     override val observePairedDevices: Flow<List<BluetoothDeviceModel>>
         get() = database.observeBluetoothDevices

@@ -1,6 +1,7 @@
 package app.viewmodel
 
 import android.app.Activity
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import app.DiGraph
 import app.android.Bluetooth
@@ -13,6 +14,8 @@ import app.extensions.now
 import app.extensions.toRelativeTimeSpanString
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
+import app.repository.BluetoothDevicesRepository
+import app.repository.bluetoothDevicesRepository
 import app.store.BluetoothDevicesStore
 import app.store.KeyValueStorage
 import app.store.bluetoothDevicesStore
@@ -25,11 +28,12 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 
 val DiGraph.bluetoothDevicesViewModel: BluetoothDevicesViewModel
-    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, workManager, keyValueStorage, bluetooth, androidNotifications)
+    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, workManager, bluetoothDevicesRepository, keyValueStorage, bluetooth, androidNotifications)
 
 class BluetoothDevicesViewModel(
     private val bluetoothDevicesStore: BluetoothDevicesStore,
     private val workManager: WorkManager,
+    private val bluetoothDevicesRepository: BluetoothDevicesRepository,
     keyValueStorage: KeyValueStorage,
     bluetooth: Bluetooth,
     notifications: AndroidNotifications
@@ -56,7 +60,7 @@ class BluetoothDevicesViewModel(
         workManager.runBluetoothDeviceBatteryCheck(activity)
     }
 
-    fun manuallyAddBluetoothDevice(hardwareAddress: String) {
+    fun manuallyAddBluetoothDevice(context: Context, hardwareAddress: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val model = BluetoothDeviceModel(
                 hardwareAddress = hardwareAddress,
@@ -67,6 +71,7 @@ class BluetoothDevicesViewModel(
             )
 
             bluetoothDevicesStore.manuallyAddDevice(model)
+            bluetoothDevicesRepository.updateBatteryLevel(context, model)
         }
     }
 

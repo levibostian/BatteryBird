@@ -103,6 +103,8 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
         bluetoothDevicesViewModel.updateMissingPermissions(context.findActivity()) // get the next permission, if any
     }
 
+    // TODO: the last time connected text, make it update once a second so the last time conneceted always updated.
+
     val missingPermissionCtas = bluetoothDevicesViewModel.observeMissingPermissions.collectAsState().value.map { missingPermission ->
         RuntimePermissionCTA(
             title = when (missingPermission) {

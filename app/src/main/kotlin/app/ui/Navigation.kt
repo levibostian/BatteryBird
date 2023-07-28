@@ -22,6 +22,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import app.DiGraph
 import app.ui.screens.AddDevice
+import app.ui.screens.AddDeviceScreen
 import app.ui.screens.DevicesList
 import app.ui.widgets.TopAppBar
 import app.viewModelFromActivity
@@ -68,21 +69,6 @@ internal fun NavGraphBuilder.addAddDeviceRoute(
     composable(
         route = Screen.AddDevice.route
     ) {
-        // This pattern of having part of the View here instead of inside AddDevice is to make
-        // @Preview work. Make AddDevice() not take in a ViewModel instance so @Preview doesn't need to provide a ViewModel override/stub.
-        Scaffold(
-            topBar = { TopAppBar("Add device", navController) },
-        ) { contentPadding ->
-
-            Box(Modifier.padding(contentPadding.calculateTopPadding())) {
-                val bluetoothDevicesViewModel: BluetoothDevicesViewModel = viewModelFromActivity()
-
-                AddDevice(modifier = Modifier.padding(top = 20.dp), onAddDevice = { hardwareAddress ->
-                    bluetoothDevicesViewModel.manuallyAddBluetoothDevice(hardwareAddress)
-
-                    navController.navigateUp()
-                })
-            }
-        }
+        AddDeviceScreen(navController = navController)
     }
 }

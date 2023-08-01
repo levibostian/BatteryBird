@@ -10,6 +10,7 @@ import app.android.WorkManager
 import app.android.bluetooth
 import app.android.androidNotifications
 import app.android.workManager
+import app.extensions.delaySeconds
 import app.extensions.now
 import app.extensions.toRelativeTimeSpanString
 import app.model.samples.Samples
@@ -22,17 +23,17 @@ import app.store.bluetoothDevicesStore
 import app.store.keyValueStorage
 import earth.levi.batterybird.BluetoothDeviceModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 
 val DiGraph.bluetoothDevicesViewModel: BluetoothDevicesViewModel
-    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, workManager, bluetoothDevicesRepository, keyValueStorage, bluetooth, androidNotifications)
+    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, bluetoothDevicesRepository, keyValueStorage, bluetooth, androidNotifications)
 
 class BluetoothDevicesViewModel(
     private val bluetoothDevicesStore: BluetoothDevicesStore,
-    private val workManager: WorkManager,
     private val bluetoothDevicesRepository: BluetoothDevicesRepository,
     keyValueStorage: KeyValueStorage,
     bluetooth: Bluetooth,
@@ -56,8 +57,19 @@ class BluetoothDevicesViewModel(
     override fun updateMissingPermissions(activity: Activity) {
         super.updateMissingPermissions(activity)
 
-        // Because the user might have just accepted the bluetooth connect permission, let's run the worker so we can show bluetooth devices in the UI right away.
-        workManager.runBluetoothDeviceBatteryCheck(activity)
+        // Because the user might have just accepted the bluetooth connect permission, let's update battery levels so we can show bluetooth devices in the UI right away.
+        viewModelScope.launch(Dispatchers.IO) {
+            bluetoothDevicesRepository.updateAllBatteryLevels(activity, updateNotifications = true)
+        }
+    }
+
+    // Call from UI to continuously update the battery levels while the UI is visible.
+    fun updateBatteryLevels(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            bluetoothDevicesRepository.updateAllBatteryLevels(context, updateNotifications = true)
+
+            delaySeconds(30)
+        }
     }
 
     fun manuallyAddBluetoothDevice(context: Context, hardwareAddress: String) {
@@ -71,7 +83,7 @@ class BluetoothDevicesViewModel(
             )
 
             bluetoothDevicesStore.manuallyAddDevice(model)
-            bluetoothDevicesRepository.updateBatteryLevel(context, model)
+            bluetoothDevicesRepository.updateBatteryLevel(context, model) // update battery level right away so we can show it in the UI after adding
         }
     }
 

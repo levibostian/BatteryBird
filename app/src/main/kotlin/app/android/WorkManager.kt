@@ -1,11 +1,10 @@
 package app.android
 
 import android.content.Context
-import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import app.DiGraph
-import app.work.AssertBatteryCheckerRunningWorker
 import app.work.BluetoothDeviceBatteryCheckWorker
 import java.util.concurrent.TimeUnit
 
@@ -13,32 +12,31 @@ val DiGraph.workManager: WorkManager
     get() = WorkManager()
 
 class WorkManager {
-    fun runBluetoothDeviceBatteryCheck(context: Context) {
-        androidx.work.WorkManager.getInstance(context).apply {
-            // We only want 1 job to be running at a time. If one already running, skip this request.
-            val taskTag = BluetoothDeviceBatteryCheckWorker::class.java.simpleName
 
-            // TODO: test this works.
-            // it seems that we can put the workmanager into a state where this job never runs again.
-            // I think that if there is a bug in the blueooth suspend getbattery function, it will never run again.
-            // maybe we stop using a long runner job and just make it periodic?
-            // or, every so often, we do cancel the job and re-schedule it.
-
-            // maybe when app is in background, 15 minute updates is good enough. But when app is in foreground, we want to check more often.
-            enqueueUniqueWork(taskTag, ExistingWorkPolicy.KEEP, OneTimeWorkRequestBuilder<BluetoothDeviceBatteryCheckWorker>()
-                .build())
-        }
+    fun schedulePeriodicBluetoothDeviceBatteryCheck(context: Context) {
+        runDeviceBatteryCheck(context, isPeriodic = true)
     }
 
-    // Because the battery check worker never stops, this periodic worker is just to make sure the battery check worker is running.
-    // This increases the chances that our worker is running at all times.
-    fun schedulePeriodicBluetoothDeviceBatteryCheck(context: Context) {
-        androidx.work.WorkManager.getInstance(context).apply {
-            val taskTag = AssertBatteryCheckerRunningWorker::class.java.simpleName
+    fun runDeviceBatteryCheckOnce(context: Context) {
+        runDeviceBatteryCheck(context, isPeriodic = false)
+    }
 
-            enqueue(PeriodicWorkRequestBuilder<AssertBatteryCheckerRunningWorker>(15, TimeUnit.MINUTES)
-                .addTag(taskTag)
-                .build())
+    private fun runDeviceBatteryCheck(context: Context, isPeriodic: Boolean) {
+        androidx.work.WorkManager.getInstance(context).apply {
+            val taskTag = BluetoothDeviceBatteryCheckWorker::class.java.simpleName
+
+            // If there is a bug in the battery check worker where the job does not finish, we want to cancel the job and start a new one. Otherwise, we run the risk of the job never succeeding and a new one never starting to replace it.
+            cancelAllWorkByTag(taskTag)
+
+            if (isPeriodic) {
+                enqueue(PeriodicWorkRequestBuilder<BluetoothDeviceBatteryCheckWorker>(15, TimeUnit.MINUTES)
+                    .addTag(taskTag)
+                    .build())
+            } else {
+                enqueue(OneTimeWorkRequestBuilder<BluetoothDeviceBatteryCheckWorker>()
+                    .addTag(taskTag)
+                    .build())
+            }
         }
     }
 }

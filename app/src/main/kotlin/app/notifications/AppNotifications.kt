@@ -21,16 +21,6 @@ val DiGraph.notifications: AppNotifications
 
 class AppNotifications(private val keyValueStorage: KeyValueStorage, private val androidNotifications: AndroidNotifications) {
 
-    fun getBatteryMonitoringNotification(context: Context, show: Boolean = false) = getNotificationBuilder(context, AndroidNotifications.Channels.BackgroundUpdatesDeviceBatteryLevels).apply {
-        setContentTitle("Monitoring Bluetooth battery levels...")
-        setSmallIcon(R.drawable.notification_small_monitoring)
-        setGroup(AndroidNotifications.Groups.DevicesBeingMonitored.name)
-        setSortKey("aaaaaaa") // we want this notification to be displayed on top of group so set sort key to something that can't be beat lexicographically
-        setOngoing(true)
-        color = context.resources.getColor(R.color.monitoring_notification)
-        setId(AndroidNotifications.Groups.DevicesBeingMonitored.ordinal)
-    }.build(showAfterBuild = show)
-
     fun getBatteryLowNotification(context: Context, device: BluetoothDeviceModel, show: Boolean = false): Notification {
         val notificationBuilder = getNotificationBuilder(context, AndroidNotifications.Channels.LowBattery).apply {
             setContentTitle("${device.name} needs charged")

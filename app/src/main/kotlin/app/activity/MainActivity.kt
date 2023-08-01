@@ -43,5 +43,6 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         bluetoothDevicesViewModel.updateMissingPermissions(this)
+        bluetoothDevicesViewModel.updateBatteryLevels(this)
     }
 }

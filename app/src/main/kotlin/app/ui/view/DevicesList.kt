@@ -1,18 +1,9 @@
-package app.ui.screens
+package app.ui.view
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
-import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +22,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,43 +40,30 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.isDebugInspectorInfoEnabled
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
-import app.DiGraph
-import app.android.bluetooth
-import app.android.workManager
 import app.extensions.findActivity
 import app.extensions.supportEmailIntent
 import app.extensions.systemBluetoothSettingsIntent
 import app.extensions.toRelativeTimeSpanString
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
-import app.ui.AppNavGraph
-import app.ui.theme.AppTheme
 import app.ui.theme.BatteryLevelHigh
 import app.ui.theme.BatteryLevelLow
 import app.ui.theme.BatteryLevelMedium
 import app.ui.theme.BatteryLevelTrackDark
 import app.ui.theme.BatteryLevelTrackLight
-import app.ui.theme.Primary
 import app.ui.type.AnyCTA
 import app.ui.type.ButtonCTA
 import app.ui.type.RuntimePermission
 import app.ui.type.RuntimePermissionCTA
 import app.ui.widgets.ClickableText
-import app.viewModelDiGraph
 import app.viewModelFromActivity
 import app.viewmodel.BluetoothDevicesViewModel
-import app.viewmodel.bluetoothDevicesViewModel
 import earth.levi.batterybird.BluetoothDeviceModel
-import kotlinx.datetime.Instant
 
 @Composable
 fun DevicesList(onAddDeviceClicked: () -> Unit) {

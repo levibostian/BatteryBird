@@ -5,15 +5,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.DiGraph
 import app.android.workManager
 import app.ui.AppNavGraph
-import app.ui.screens.DevicesList
 import app.ui.theme.AppTheme
 import app.viewModelDiGraph
-import app.viewmodel.BluetoothDevicesViewModel
 import app.viewmodel.bluetoothDevicesViewModel
 
 class MainActivity : ComponentActivity() {

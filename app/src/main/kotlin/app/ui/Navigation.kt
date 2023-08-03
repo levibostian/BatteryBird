@@ -1,33 +1,14 @@
 package app.ui
 
-import android.content.Intent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.navDeepLink
-import kotlinx.coroutines.flow.StateFlow
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.unit.dp
-import app.DiGraph
-import app.ui.screens.AddDevice
-import app.ui.screens.AddDeviceScreen
-import app.ui.screens.DevicesList
-import app.ui.widgets.TopAppBar
-import app.viewModelFromActivity
-import app.viewmodel.BluetoothDevicesViewModel
-import app.viewmodel.bluetoothDevicesViewModel
+import app.ui.view.AddDeviceScreen
+import app.ui.view.DevicesList
 
 sealed class Screen(val route: String) {
     object Devices : Screen("devices")

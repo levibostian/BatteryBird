@@ -171,6 +171,7 @@ open class BluetoothImpl(private val log: Logger): AndroidFeatureImpl(), Bluetoo
             return@suspendCoroutine continuation.resume(null)
         }
 
+        if (!canGetPairedDevices(context)) return@suspendCoroutine continuation.resume(null)
         if (!remoteDevice.isConnected) return@suspendCoroutine continuation.resume(null)
 
         remoteDevice.connectGatt(context, false, gattCallback)

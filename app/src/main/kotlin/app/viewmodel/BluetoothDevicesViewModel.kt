@@ -83,7 +83,7 @@ class BluetoothDevicesViewModel(
             )
 
             bluetoothDevicesStore.manuallyAddDevice(model)
-            bluetoothDevicesRepository.updateBatteryLevel(context, model) // update battery level right away so we can show it in the UI after adding
+            bluetoothDevicesRepository.updateBatteryLevel(context, model, updateNotifications = true) // update battery level right away so we can show it in the UI after adding
         }
     }
 

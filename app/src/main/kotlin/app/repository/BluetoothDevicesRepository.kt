@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 
 interface BluetoothDevicesRepository {
     suspend fun updateAllBatteryLevels(context: Context, updateNotifications: Boolean)
-    suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel): Int?
+    suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int?
 }
 
 val DiGraph.bluetoothDevicesRepository: BluetoothDevicesRepository
@@ -31,23 +31,23 @@ class BluetoothDevicesRepositoryImpl(
         insertPairedDevicesIntoDB(context) // sync system bluetooth devices with our DB to keep our app up-to-date with devices you may have added
 
         devicesStore.devices.forEach { device ->
-            val batteryLevel = updateBatteryLevel(context, device)
-
-            if (updateNotifications)  {
-                if (batteryLevel != null && batteryLevel <= 20) {
-                    notifications.getBatteryLowNotification(context, device, show = true)
-                } else {
-                    notifications.dismissBatteryLowNotification(context, device)
-                }
-            }
+            updateBatteryLevel(context, device, updateNotifications)
         }
     }
 
-    override suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel): Int? = withContext(Dispatchers.IO) {
+    override suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int? = withContext(Dispatchers.IO) {
         val batteryLevel = bluetooth.getBatteryLevel(context, device)
         val lastTimeConnected = if (batteryLevel == null) null else now()
 
         devicesStore.devices = listOf(device.copy(batteryLevel = batteryLevel?.toLong(), lastTimeConnected = lastTimeConnected))
+
+        if (updateNotifications)  {
+            if (batteryLevel != null && batteryLevel <= 20) {
+                notifications.getBatteryLowNotification(context, device, show = true)
+            } else {
+                notifications.dismissBatteryLowNotification(context, device)
+            }
+        }
 
         batteryLevel
     }

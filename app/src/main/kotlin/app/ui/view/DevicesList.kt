@@ -178,13 +178,11 @@ fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMod
                 }
             }
         }
-
-        if (!isDemoMode) { // to not allow someone to add a device until bluetooth is enabled
-            ManuallyAddDeviceView(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 30.dp)) {
-                onAddDeviceClicked()
-            }
+        
+        ManuallyAddDeviceView(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 30.dp)) {
+            onAddDeviceClicked()
         }
     }
 }

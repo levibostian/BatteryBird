@@ -11,6 +11,7 @@
 - [ ] Try adding a device with invalid hardware address. See error message. 
 - [ ] Try adding same device hardware address multiple times. Should not see duplicate or replaced device. Should ignore request. 
 - [ ] After adding a device, should see app try and get the battery level immediately after adding. 
+- [ ] Add `ff:ff:ff:ff:ff:ff` as a device. I guess it's an invalid address according to the Android OS. So, Android `getRemoteDevice` will throw an exception. Verify that the app does not throw an exception. 
 
 #### Devices list 
 - [ ] When app in foreground, should see app check battery level periodically. 

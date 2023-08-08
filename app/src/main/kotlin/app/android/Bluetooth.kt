@@ -162,7 +162,14 @@ open class BluetoothImpl(private val log: Logger): AndroidFeatureImpl(), Bluetoo
             }
         }
 
-        val remoteDevice = systemBluetoothAdapter.getRemoteDevice(device.hardwareAddress) ?: return@suspendCoroutine continuation.resume(null)
+        val remoteDevice = try {
+            systemBluetoothAdapter.getRemoteDevice(device.hardwareAddress) ?: return@suspendCoroutine continuation.resume(null)
+        } catch (IllegalArgumentException: Exception) {
+            // if bluetooth address is invalid, an exception is thrown (example: `ff:ff:ff:ff:ff:ff`). We can try to add validation in the UI to prevent exceptions, but still try/catch to prevent app crashes.
+            log.debug("invalid bluetooth address: ${device.hardwareAddress}", this)
+
+            return@suspendCoroutine continuation.resume(null)
+        }
 
         if (!remoteDevice.isConnected) return@suspendCoroutine continuation.resume(null)
 

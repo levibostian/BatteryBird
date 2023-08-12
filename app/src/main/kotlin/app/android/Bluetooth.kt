@@ -72,10 +72,11 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 when (newState) {
                     BluetoothProfile.STATE_CONNECTED -> {
+                        log.debug("device connected: ${gatt.device.name}/${gatt.device.address}", this)
                         gatt.discoverServices() // you must discover services in order to use them. I tried to skip this step and just read the characteristic, but it didn't work. All reading was null.
                     }
                     else -> {
-                        log.debug("disconnected from device: ${device.name}/${device.hardwareAddress}", this)
+                        log.debug("disconnected from device ($newState): ${device.name}/${device.hardwareAddress}", this)
                         onDone(gatt, null)
                     }
                 }
@@ -178,6 +179,23 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
         }
 
         log.debug("getting battery level for device: ${device.name}/${device.hardwareAddress}", this)
+
+        /*
+        Added this because I had issues with some of my devices. Specifically, my Sony WH-1000XM5 headphones.
+        Behavior:
+        * device connected to my phone.
+        * connectGatt() called on the headphones.
+        * connection status is connected.
+        * doesn't matter what happens in the gatt connection callback.
+        * Exactly 5 seconds later, the headphones turn off which means that they disconnect from my phone.
+
+        When I use this, the headphones have no issues.
+         */
+        remoteDevice.batteryLevel?.let {  batteryLevel ->
+            log.debug("OS battery level: ${device.name}/${device.hardwareAddress}, $batteryLevel", this)
+            return@suspendCoroutine continuation.resume(batteryLevel)
+        }
+
         remoteDevice.connectGatt(context, false, gattCallback)
     }
 

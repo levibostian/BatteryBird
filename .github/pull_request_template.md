@@ -20,3 +20,7 @@
 
 ### Periodic battery level updates 
 - [ ] When app is killed, battery level should be updated every 15 minutes. 
+
+### Weird behaviors for some devices 
+- [ ] Test app with Sony WH-1000XM5 headphones. This device when trying to use GATT causes the headphones to turn off. App should be able to get the bluetooth connection status and battery level when the headphones are connected and disconnected. 
+- [ ] Test app with Coros Pace 2 watch. This device only works by manually adding the hardware address and using GATT to get battery level. 

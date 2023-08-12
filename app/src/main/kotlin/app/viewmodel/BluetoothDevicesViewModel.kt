@@ -76,6 +76,8 @@ class BluetoothDevicesViewModel(
     }
 
     fun manuallyAddBluetoothDevice(hardwareAddress: String) {
+        val hardwareAddress = hardwareAddress.trim().uppercase()
+
         viewModelScope.launch(Dispatchers.IO) {
             val model = BluetoothDeviceModel(
                 hardwareAddress = hardwareAddress,

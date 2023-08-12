@@ -6,11 +6,13 @@ import app.android.androidNotifications
 
 class MainApplication: Application() {
 
+    lateinit var diGraph: DiGraph
+
     override fun onCreate() {
         super.onCreate()
 
-        DiGraph.initialize(this)
-
-        DiGraph.instance.androidNotifications.createChannels()
+        diGraph = DiGraph(this).apply {
+            androidNotifications.createChannels()
+        }
     }
 }

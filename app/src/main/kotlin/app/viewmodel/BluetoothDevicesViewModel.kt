@@ -1,6 +1,7 @@
 package app.viewmodel
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import app.DiGraph
@@ -13,6 +14,8 @@ import app.android.workManager
 import app.extensions.delaySeconds
 import app.extensions.now
 import app.extensions.toRelativeTimeSpanString
+import app.log.Logger
+import app.log.logger
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
 import app.repository.BluetoothDevicesRepository
@@ -28,17 +31,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
+import kotlin.math.log
 
 val DiGraph.bluetoothDevicesViewModel: BluetoothDevicesViewModel
-    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, bluetoothDevicesRepository, keyValueStorage, bluetooth, androidNotifications)
+    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, bluetoothDevicesRepository, logger, application, keyValueStorage, bluetooth, androidNotifications)
 
 class BluetoothDevicesViewModel(
     private val bluetoothDevicesStore: BluetoothDevicesStore,
     private val bluetoothDevicesRepository: BluetoothDevicesRepository,
+    private val logger: Logger,
+    application: Application,
     keyValueStorage: KeyValueStorage,
     bluetooth: Bluetooth,
     notifications: AndroidNotifications
-    ): BaseViewModel(androidFeaturesUsedInViewModel = listOf(bluetooth, notifications), keyValueStorage) {
+    ): BaseViewModel(application, androidFeaturesUsedInViewModel = listOf(bluetooth, notifications), keyValueStorage) {
 
     // Set demo data so the app has something to show in the UI
     private var _pairedDevices = MutableStateFlow(Samples.bluetoothDevices)
@@ -52,27 +58,24 @@ class BluetoothDevicesViewModel(
 
     init {
         startObservingPairedBluetoothDevices()
+
+        updateBatteryLevels() // give user of app the most up-to-date info when app goes into foreground by updating battery levels on create.
     }
 
     override fun updateMissingPermissions(activity: Activity) {
         super.updateMissingPermissions(activity)
 
         // Because the user might have just accepted the bluetooth connect permission, let's update battery levels so we can show bluetooth devices in the UI right away.
+        updateBatteryLevels()
+    }
+
+    fun updateBatteryLevels() {
         viewModelScope.launch(Dispatchers.IO) {
-            bluetoothDevicesRepository.updateAllBatteryLevels(activity, updateNotifications = true)
+            bluetoothDevicesRepository.updateAllBatteryLevels(getApplication(), updateNotifications = true)
         }
     }
 
-    // Call from UI to continuously update the battery levels while the UI is visible.
-    fun updateBatteryLevels(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            bluetoothDevicesRepository.updateAllBatteryLevels(context, updateNotifications = true)
-
-            delaySeconds(30)
-        }
-    }
-
-    fun manuallyAddBluetoothDevice(context: Context, hardwareAddress: String) {
+    fun manuallyAddBluetoothDevice(hardwareAddress: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val model = BluetoothDeviceModel(
                 hardwareAddress = hardwareAddress,
@@ -83,7 +86,7 @@ class BluetoothDevicesViewModel(
             )
 
             bluetoothDevicesStore.manuallyAddDevice(model)
-            bluetoothDevicesRepository.updateBatteryLevel(context, model, updateNotifications = true) // update battery level right away so we can show it in the UI after adding
+            updateBatteryLevels() // update battery level right away so we can show it in the UI after adding
         }
     }
 

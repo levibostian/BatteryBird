@@ -43,7 +43,7 @@ fun AddDeviceScreen(navController: NavHostController) {
             val bluetoothDevicesViewModel: BluetoothDevicesViewModel = viewModelFromActivity()
 
             AddDevice(modifier = Modifier.padding(top = 20.dp), onAddDevice = { hardwareAddress ->
-                bluetoothDevicesViewModel.manuallyAddBluetoothDevice(context, hardwareAddress)
+                bluetoothDevicesViewModel.manuallyAddBluetoothDevice(hardwareAddress)
 
                 navController.navigateUp()
             })

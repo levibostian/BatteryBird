@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import app.DiGraph
+import app.diGraph
 import app.ui.type.RuntimePermission
 import kotlin.random.Random
 
@@ -26,8 +27,7 @@ interface AndroidNotifications: AndroidFeature {
     fun createChannels()
 
     enum class Groups { // You can group notifications together in tray that are related.
-        LowBatteryDevices,
-        DevicesBeingMonitored;
+        LowBatteryDevices
     }
 
     enum class Channels {
@@ -151,7 +151,7 @@ class DismissNotificationService: Service() {
         val notificationId = intent.extras!!.getInt(notificationIdBundleKey)
         val notificationTag = intent.extras!!.getString(notificationTagBundleKey)
 
-        DiGraph.instance.androidNotifications.cancel(notificationId, notificationTag)
+        diGraph.androidNotifications.cancel(notificationId, notificationTag)
 
         stopSelf()
 

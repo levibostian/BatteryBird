@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import app.DiGraph
 import app.android.workManager
+import app.diGraph
 import app.ui.AppNavGraph
 import app.ui.theme.AppTheme
 import app.viewModelDiGraph
@@ -18,8 +19,9 @@ class MainActivity : ComponentActivity() {
         fun getIntent(context: Context) = Intent(context, MainActivity::class.java)
     }
 
+    // initialize properties late for tests to override properties before they are used
     private val bluetoothDevicesViewModel by viewModelDiGraph { bluetoothDevicesViewModel }
-    private val workManager by lazy { DiGraph.instance.workManager }
+    private val workManager by lazy { diGraph.workManager }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +41,5 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         bluetoothDevicesViewModel.updateMissingPermissions(this)
-        bluetoothDevicesViewModel.updateBatteryLevels(this)
     }
 }

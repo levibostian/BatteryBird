@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import app.DiGraph
@@ -30,17 +31,15 @@ interface Bluetooth: AndroidFeature {
     val isBluetoothOn: Boolean
 }
 
-val DiGraph.bluetoothAdapter: BluetoothAdapter
-    get() = bluetoothManager.adapter
-
 val DiGraph.bluetooth: Bluetooth
-    get() = override() ?: BluetoothImpl(logger)
+    get() = override() ?: BluetoothImpl(logger, bluetoothManager)
 
-open class BluetoothImpl(private val log: Logger): AndroidFeatureImpl(), Bluetooth {
+open class BluetoothImpl(private val log: Logger, private val bluetoothManager: BluetoothManager): AndroidFeatureImpl(), Bluetooth {
 
     // Get this later instead of in the constructor. Getting the bluetooth adapter might return null so we want to try and retrieve it only after
     // we have done checks such as getting permission.
-    private val systemBluetoothAdapter by lazy { DiGraph.instance.bluetoothAdapter }
+    private val systemBluetoothAdapter
+        get() = bluetoothManager.adapter
 
     override fun canGetPairedDevices(context: Context): Boolean = areAllPermissionsGranted(context)
     
@@ -66,7 +65,6 @@ open class BluetoothImpl(private val log: Logger): AndroidFeatureImpl(), Bluetoo
     override suspend fun getBatteryLevel(context: Context, device: BluetoothDeviceModel): Int? = suspendCoroutine { continuation ->
         val gattCallback = object : BluetoothGattCallback() {
             val onDone: (BluetoothGatt?, Int?) -> Unit = { gatt, returnValue ->
-                log.debug("onDone", this@BluetoothImpl)
                 continuation.resume(returnValue)
                 gatt?.close()
             }
@@ -172,6 +170,9 @@ open class BluetoothImpl(private val log: Logger): AndroidFeatureImpl(), Bluetoo
         }
 
         if (!canGetPairedDevices(context)) return@suspendCoroutine continuation.resume(null)
+
+        log.debug("getting battery level for device: ${device.name}/${device.hardwareAddress}", this)
+        device.batteryLevel?.let { batteryLevel -> return@suspendCoroutine continuation.resume(batteryLevel.toInt()) }
         if (!remoteDevice.isConnected) return@suspendCoroutine continuation.resume(null)
 
         remoteDevice.connectGatt(context, false, gattCallback)
@@ -184,9 +185,9 @@ open class BluetoothImpl(private val log: Logger): AndroidFeatureImpl(), Bluetoo
 }
 
 val DiGraph.bluetoothStub: Bluetooth
-    get() = BluetoothSamplesStub(logger)
+    get() = BluetoothSamplesStub(logger, bluetoothManager)
 
-class BluetoothSamplesStub(logger: Logger): BluetoothImpl(logger) {
+class BluetoothSamplesStub(logger: Logger, bluetoothManager: BluetoothManager): BluetoothImpl(logger, bluetoothManager) {
 
     var samplePairedDevices: List<BluetoothDeviceModel> = Samples.bluetoothDeviceModels
 

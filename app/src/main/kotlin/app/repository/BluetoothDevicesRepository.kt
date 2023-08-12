@@ -9,7 +9,9 @@ import app.extensions.now
 import app.notifications.AppNotifications
 import app.notifications.notifications
 import app.store.BluetoothDevicesStore
+import app.store.KeyValueStorage
 import app.store.bluetoothDevicesStore
+import app.store.keyValueStorage
 import earth.levi.batterybird.BluetoothDeviceModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,12 +22,13 @@ interface BluetoothDevicesRepository {
 }
 
 val DiGraph.bluetoothDevicesRepository: BluetoothDevicesRepository
-    get() = override() ?: BluetoothDevicesRepositoryImpl(bluetooth, bluetoothDevicesStore, notifications)
+    get() = override() ?: BluetoothDevicesRepositoryImpl(bluetooth, bluetoothDevicesStore, notifications, keyValueStorage)
 
 class BluetoothDevicesRepositoryImpl(
     private val bluetooth: Bluetooth,
     private val devicesStore: BluetoothDevicesStore,
-    private val notifications: AppNotifications): BluetoothDevicesRepository {
+    private val notifications: AppNotifications,
+    private val keyValueStorage: KeyValueStorage): BluetoothDevicesRepository {
 
     override suspend fun updateAllBatteryLevels(context: Context, updateNotifications: Boolean) {
         insertPairedDevicesIntoDB(context) // sync system bluetooth devices with our DB to keep our app up-to-date with devices you may have added
@@ -42,9 +45,17 @@ class BluetoothDevicesRepositoryImpl(
         devicesStore.devices = listOf(device.copy(batteryLevel = batteryLevel?.toLong(), lastTimeConnected = lastTimeConnected))
 
         if (updateNotifications)  {
-            if (batteryLevel != null && batteryLevel <= 20) {
-                notifications.getBatteryLowNotification(context, device, show = true)
+            // To avoid annoying the user, there is an ignore action button added to notification. If pressed, we do not show the notification again
+            // until th device charges again.
+            // Check if we should ignore showing the notification.
+            if (batteryLevel != null && batteryLevel <= 20 && !keyValueStorage.isLowBatteryAlertIgnoredForDevice(device)) {
+                notifications.apply {
+                    show(getBatteryLowNotification(context, device))
+                }
             } else {
+                // reset memory of alert being ignored so next time battery is low, notification shows by default.
+                keyValueStorage.setLowBatteryAlertIgnoredForDevice(device, shouldIgnore = false)
+
                 notifications.dismissBatteryLowNotification(context, device)
             }
         }

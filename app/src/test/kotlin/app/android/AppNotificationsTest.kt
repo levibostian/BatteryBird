@@ -29,7 +29,7 @@ class AppNotificationsTest: BaseTest() {
     @Test
     fun getBatteryLowNotification_givenNotificationShownPreviously_expectDoNotShow() {
         val givenBluetoothDevice = Samples.bluetoothDevices[0]
-        keyValueStorage.setLowBatteryAlertSentForDevice(givenBluetoothDevice, alertSent = true)
+        keyValueStorage.setLowBatteryAlertIgnoredForDevice(givenBluetoothDevice, shouldIgnore = true)
 
         notifications.getBatteryLowNotification(context, givenBluetoothDevice, show = true)
 

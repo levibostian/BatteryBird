@@ -21,11 +21,15 @@ open class KeyValueStorage(private val sharedPreferences: SharedPreferences) {
         sharedPreferences.edit().putBoolean("${Keys.HasNeverAskedForARuntimePermission.name}_${permission.string}", true).commit()
     }
 
-    fun setLowBatteryAlertSentForDevice(device: BluetoothDeviceModel, alertSent: Boolean = true) {
-        sharedPreferences.edit().putBoolean("${Keys.LowBatteryAlertForDeviceSent}_${device.hardwareAddress}", alertSent).commit()
+    fun setLowBatteryAlertIgnoredForDevice(device: BluetoothDeviceModel, shouldIgnore: Boolean = true) {
+        setLowBatteryAlertIgnoredForDevice(device.hardwareAddress, shouldIgnore)
     }
 
-    fun hasLowBatteryAlertBeenSentForDevice(device: BluetoothDeviceModel): Boolean {
+    fun setLowBatteryAlertIgnoredForDevice(hardwareAddress: String, shouldIgnore: Boolean = true) {
+        sharedPreferences.edit().putBoolean("${Keys.LowBatteryAlertForDeviceSent}_${hardwareAddress}", shouldIgnore).commit()
+    }
+
+    fun isLowBatteryAlertIgnoredForDevice(device: BluetoothDeviceModel): Boolean {
         return sharedPreferences.getBoolean("${Keys.LowBatteryAlertForDeviceSent}_${device.hardwareAddress}", false)
     }
 

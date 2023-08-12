@@ -15,6 +15,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import app.DiGraph
 import app.diGraph
+import app.store.keyValueStorage
 import app.ui.type.RuntimePermission
 import kotlin.random.Random
 
@@ -130,15 +131,19 @@ val NotificationCompat.Builder.tag: String?
 val Notification.tag: String?
     get() = extras.getString("tag")
 
-class DismissNotificationService: Service() {
+class IgnoreNotificationService: Service() {
     companion object {
         private val notificationIdBundleKey = "id"
         private val notificationTagBundleKey = "tag"
+        private val deviceHardwareAddressBundleKey = "hardwareAddress"
 
-        fun getPendingIntent(context: Context, notificationId: Int, notificationTag: String?) = PendingIntent.getService(
+        fun getPendingIntent(context: Context, deviceHardwareAddress: String, notificationId: Int, notificationTag: String?) = PendingIntent.getService(
             context,
             Random.nextInt(),
-            Intent(context, DismissNotificationService::class.java).putExtra(notificationIdBundleKey, notificationId).putExtra(notificationTagBundleKey, notificationTag),
+            Intent(context, IgnoreNotificationService::class.java)
+                .putExtra(notificationIdBundleKey, notificationId)
+                .putExtra(notificationTagBundleKey, notificationTag)
+                .putExtra(deviceHardwareAddressBundleKey, deviceHardwareAddress),
             PendingIntent.FLAG_IMMUTABLE
         )
     }
@@ -150,11 +155,17 @@ class DismissNotificationService: Service() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val notificationId = intent.extras!!.getInt(notificationIdBundleKey)
         val notificationTag = intent.extras!!.getString(notificationTagBundleKey)
+        val deviceHardwareAddress = intent.extras!!.getString(deviceHardwareAddressBundleKey)!!
 
-        diGraph.androidNotifications.cancel(notificationId, notificationTag)
+        ignoreNotification(notificationId, notificationTag, deviceHardwareAddress)
 
         stopSelf()
 
         return START_STICKY_COMPATIBILITY
+    }
+
+    private fun ignoreNotification(notificationId: Int, notificationTag: String?, deviceHardwareAddress: String) {
+        diGraph.androidNotifications.cancel(notificationId, notificationTag) // remove notification from tray
+        diGraph.keyValueStorage.setLowBatteryAlertIgnoredForDevice(deviceHardwareAddress, shouldIgnore = true) // remember we ignored notification to not show anymore until this is reset.
     }
 }

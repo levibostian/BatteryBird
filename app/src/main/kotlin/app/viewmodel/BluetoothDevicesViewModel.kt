@@ -58,8 +58,6 @@ class BluetoothDevicesViewModel(
 
     init {
         startObservingPairedBluetoothDevices()
-
-        updateBatteryLevels() // give user of app the most up-to-date info when app goes into foreground by updating battery levels on create.
     }
 
     override fun updateMissingPermissions(activity: Activity) {

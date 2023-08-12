@@ -49,14 +49,12 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
 
         // Note: If bluetooth is off on device, bondedDevices will return empty list.
         return Result.success(systemBluetoothAdapter.bondedDevices.toList().map { pairedDevice ->
-            val isDeviceConnected = pairedDevice.batteryLevel != null
-
             BluetoothDeviceModel(
                 hardwareAddress = pairedDevice.address,
                 name = pairedDevice.name,
                 batteryLevel = null, // we have to update the battery level in a separate call because it's an async operation.
-                isConnected = isDeviceConnected,
-                lastTimeConnected = if (isDeviceConnected) now() else null
+                isConnected = pairedDevice.isConnected,
+                lastTimeConnected = if (pairedDevice.isConnected) now() else null
             )
         })
     }
@@ -64,8 +62,10 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
     @SuppressLint("MissingPermission")
     override suspend fun getBatteryLevel(context: Context, device: BluetoothDeviceModel): Int? = suspendCoroutine { continuation ->
         val gattCallback = object : BluetoothGattCallback() {
-            val onDone: (BluetoothGatt?, Int?) -> Unit = { gatt, returnValue ->
-                continuation.resume(returnValue)
+            val onDone: (BluetoothGatt?, Int?) -> Unit = { gatt, batteryLevel ->
+                log.debug("battery level for device (${gatt?.device?.name}/${gatt?.device?.address}): $batteryLevel", this)
+
+                continuation.resume(batteryLevel)
                 gatt?.close()
             }
 
@@ -171,10 +171,13 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
 
         if (!canGetPairedDevices(context)) return@suspendCoroutine continuation.resume(null)
 
-        log.debug("getting battery level for device: ${device.name}/${device.hardwareAddress}", this)
-        device.batteryLevel?.let { batteryLevel -> return@suspendCoroutine continuation.resume(batteryLevel.toInt()) }
-        if (!remoteDevice.isConnected) return@suspendCoroutine continuation.resume(null)
+        // dont try to get battery level if device is not connected. This is a way to save battery by using the GATT code less often. I have noticed this app drains battery more when we try to connect to GATT for every device without checking first if it's connected.
+        if (!remoteDevice.isConnected) {
+            log.debug("device is not connected, skip getting battery level for device: ${device.name}/${device.hardwareAddress}", this)
+            return@suspendCoroutine continuation.resume(null)
+        }
 
+        log.debug("getting battery level for device: ${device.name}/${device.hardwareAddress}", this)
         remoteDevice.connectGatt(context, false, gattCallback)
     }
 

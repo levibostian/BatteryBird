@@ -39,20 +39,33 @@ class BluetoothDevicesRepositoryImpl(
     }
 
     override suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int? = withContext(Dispatchers.IO) {
-        val batteryLevel = bluetooth.getBatteryLevel(context, device)
-        val lastTimeConnected = if (batteryLevel == null) null else now()
+        val newBatteryLevelIfDeviceConnected = bluetooth.getBatteryLevel(context, device)
+        val cachedBatteryLevel = device.batteryLevel?.toInt()
 
-        devicesStore.devices = listOf(device.copy(batteryLevel = batteryLevel?.toLong(), lastTimeConnected = lastTimeConnected))
+        val lastTimeConnected = if (newBatteryLevelIfDeviceConnected == null) null else now()
+
+        // update the device in local store with the new battery level
+        devicesStore.devices = listOf(device.copy(batteryLevel = newBatteryLevelIfDeviceConnected?.toLong(), lastTimeConnected = lastTimeConnected))
 
         if (updateNotifications)  {
-            // To avoid annoying the user, there is an ignore action button added to notification. If pressed, we do not show the notification again
-            // until th device charges again.
-            // Check if we should ignore showing the notification.
-            if (batteryLevel != null && batteryLevel <= 20 && !keyValueStorage.isLowBatteryAlertIgnoredForDevice(device)) {
-                notifications.apply {
-                    show(getBatteryLowNotification(context, device))
+            // to make the app more reliable in making sure low battery notifications are shown, we use the cache as well as new battery level to cover the use case of: app killed, device battery low but device not connected, app started again.
+            // Reproduce:
+            // * Run app in android studio
+            // * Connect device with low battery
+            // * Re-run app in android studio. The app restarts with no notifications shown. This function tries to re-show the notifications.
+            val batteryLevel: Int? = newBatteryLevelIfDeviceConnected ?: cachedBatteryLevel
+
+            if (batteryLevel != null && batteryLevel <= 20) {
+                // To avoid annoying the user, there is an ignore action button added to notification. If pressed, we do not show the notification again
+                // until th device charges again. Check if we should ignore showing the notification.
+                if (!keyValueStorage.isLowBatteryAlertIgnoredForDevice(device)) {
+                    notifications.apply {
+                        show(getBatteryLowNotification(context, device))
+                    }
                 }
             } else {
+                // Important: Only run this function if the battery level is not low.
+
                 // reset memory of alert being ignored so next time battery is low, notification shows by default.
                 keyValueStorage.setLowBatteryAlertIgnoredForDevice(device, shouldIgnore = false)
 
@@ -60,7 +73,7 @@ class BluetoothDevicesRepositoryImpl(
             }
         }
 
-        batteryLevel
+        newBatteryLevelIfDeviceConnected
     }
 
     private suspend fun insertPairedDevicesIntoDB(context: Context) = withContext(Dispatchers.IO) {

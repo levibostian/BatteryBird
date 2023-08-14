@@ -1,5 +1,6 @@
 package app
 
+import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
@@ -10,6 +11,7 @@ import io.mockk.MockK
 import io.mockk.MockKVerificationScope
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.After
 import org.junit.Before
 import kotlin.reflect.KClass
 
@@ -18,17 +20,22 @@ abstract class BaseTest {
     protected val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
-    protected val di: DiGraph
-        get() = DiGraph.instance
+    protected lateinit var di: DiGraph
 
     protected lateinit var keyValueStorage: KeyValueStorage
 
     @Before
     open fun setup() {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
-        DiGraph.initialize(context)
 
-        keyValueStorage = di.keyValueStorage.also { it.deleteAll() }
+        di = DiGraph(context as Application)
+
+        keyValueStorage = di.keyValueStorage
+    }
+
+    @After
+    open fun teardown() {
+        keyValueStorage.deleteAll()
     }
 
 }

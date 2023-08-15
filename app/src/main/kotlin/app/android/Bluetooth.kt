@@ -27,6 +27,7 @@ interface Bluetooth: AndroidFeature {
     // Gets list of paired devices (or empty list if none), or Error if permissions not yet accepted
     fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>>
     suspend fun getBatteryLevel(context: Context, device: BluetoothDeviceModel): Int?
+    fun isDeviceConnected(device: BluetoothDeviceModel): Boolean
     // if system bluetooth is on or not
     val isBluetoothOn: Boolean
 }
@@ -42,6 +43,8 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
         get() = bluetoothManager.adapter
 
     override fun canGetPairedDevices(context: Context): Boolean = areAllPermissionsGranted(context)
+
+    override fun isDeviceConnected(device: BluetoothDeviceModel): Boolean = device.isConnected
     
     @SuppressLint("MissingPermission") // we check if permission granted inside of the function.
     override fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>> {

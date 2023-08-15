@@ -5,14 +5,16 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import app.DiGraph
+import app.MainApplication
 import app.android.workManager
-import app.digraph
+import app.getDiGraph
+import app.log.Logger
 import app.log.logger
 
 class BluetoothDeviceMonitorBroadcastReceiver:  BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val diGraph = context.digraph ?: return
+        val diGraph = getDiGraph(context)
 
         val log = diGraph.logger
         val workManager = diGraph.workManager

@@ -14,6 +14,7 @@ import app.store.bluetoothDevicesStore
 import app.store.keyValueStorage
 import earth.levi.batterybird.BluetoothDeviceModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 interface BluetoothDevicesRepository {
@@ -45,7 +46,7 @@ class BluetoothDevicesRepositoryImpl(
         val lastTimeConnected = if (newBatteryLevelIfDeviceConnected == null) null else now()
 
         // update the device in local store with the new battery level
-        devicesStore.devices = listOf(device.copy(batteryLevel = newBatteryLevelIfDeviceConnected?.toLong(), lastTimeConnected = lastTimeConnected))
+        devicesStore.devices = listOf(device.copy(batteryLevel = newBatteryLevelIfDeviceConnected?.toLong(), isConnected = bluetooth.isDeviceConnected(device), lastTimeConnected = lastTimeConnected))
 
         if (updateNotifications)  {
             // to make the app more reliable in making sure low battery notifications are shown, we use the cache as well as new battery level to cover the use case of: app killed, device battery low but device not connected, app started again.

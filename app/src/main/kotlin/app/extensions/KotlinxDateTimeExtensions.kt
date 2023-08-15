@@ -3,7 +3,10 @@ package app.extensions
 import android.text.format.DateUtils
 import android.text.format.DateUtils.DAY_IN_MILLIS
 import android.text.format.DateUtils.MINUTE_IN_MILLIS
+import android.text.format.DateUtils.SECOND_IN_MILLIS
 import android.text.format.DateUtils.WEEK_IN_MILLIS
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.Instant
@@ -25,7 +28,15 @@ fun Instant.toRelativeTimeSpanString(): String {
     val millisTimeAgo = this.toEpochMilliseconds()
     val millisNow = now().toEpochMilliseconds()
 
+    DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, SECOND_IN_MILLIS).toString().let { if (it.contains("ago")) return it }
     DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, MINUTE_IN_MILLIS).toString().let { if (it.contains("ago")) return it }
     DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, DAY_IN_MILLIS).toString().let { if (it.contains("ago")) return it }
     return DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, WEEK_IN_MILLIS).toString()
+}
+
+fun Instant.relativeTimeFlow(): Flow<String> = flow {
+    while (true) {
+        emit(this@relativeTimeFlow.toRelativeTimeSpanString())
+        delaySeconds(1)
+    }
 }

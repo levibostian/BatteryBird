@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.extensions.findActivity
+import app.extensions.relativeTimeFlow
 import app.extensions.supportEmailIntent
 import app.extensions.systemBluetoothSettingsIntent
 import app.extensions.toRelativeTimeSpanString
@@ -233,13 +234,14 @@ fun CTAView(cta: AnyCTA, onClick: (AnyCTA) -> Unit, modifier: Modifier = Modifie
 fun DeviceLastConnectedText(device: BluetoothDeviceModel) {
     val isDeviceConnected = device.isConnected
     val hasDeviceEverBeenConnected = device.lastTimeConnected != null
+    val lastConnectedString = device.lastTimeConnected?.relativeTimeFlow()?.collectAsState(initial = "")
 
     val text = when {
-        isDeviceConnected -> "Connected"
-        hasDeviceEverBeenConnected -> "Last connected ${device.lastTimeConnected?.toRelativeTimeSpanString()}"
+        isDeviceConnected -> "Currently connected"
+        hasDeviceEverBeenConnected -> "Last connected ${lastConnectedString?.value ?: ""}"
         else -> "Connect device to get battery level"
     }
-
+    
     Text(text = text, color = Color.Gray, fontSize = 12.sp)
 }
 

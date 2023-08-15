@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.CoroutineWorker
+import androidx.work.Worker
 import earth.levi.batterybird.store.Database
 import earth.levi.batterybird.store.DatabaseStore
 import earth.levi.batterybird.store.DriverFactory
@@ -87,6 +89,5 @@ val Activity.diGraph: DiGraph
 val Service.diGraph: DiGraph
     get() = (application as MainApplication).diGraph
 
-// Designed to be called from a BroadcastReceiver or Worker.
-val Context.digraph: DiGraph?
-    get() = (this as? MainApplication)?.diGraph
+fun CoroutineWorker.getDiGraph(context: Context): DiGraph = (context as MainApplication).diGraph
+fun BroadcastReceiver.getDiGraph(context: Context): DiGraph = (context.applicationContext as MainApplication).diGraph

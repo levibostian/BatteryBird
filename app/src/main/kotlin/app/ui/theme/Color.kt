@@ -1,5 +1,9 @@
 package app.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 val Primary = Color(0xFFF17300)
@@ -15,3 +19,14 @@ val BatteryLevelMedium = Color(0xFFF17300)
 val BatteryLevelLow = Color(0xFF92140C)
 val BatteryLevelTrackLight = Color(0xFFCCCCCC)
 val BatteryLevelTrackDark = Color(0xFF494949)
+
+// UI elements
+val ErrorMessageColor = Color(0xFFF17300)
+
+@Composable
+fun ButtonDefaults.helpButtonColor(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+) = ButtonDefaults.buttonColors(
+    containerColor = Color.LightGray,
+    contentColor = if (darkTheme) Color.Black else Color.White
+)

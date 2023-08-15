@@ -1,7 +1,9 @@
 package app.viewmodel
 
 import android.app.Activity
+import android.app.Application
 import android.os.Build
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import app.android.AndroidFeature
 import app.store.KeyValueStorage
@@ -11,7 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 // Class that all ViewModels extend in this app.
 // Allows app to have extra functionality in it's ViewModels specific to this app.
-abstract class BaseViewModel(override val androidFeaturesUsedInViewModel: List<AndroidFeature>, private val keyValueStorage: KeyValueStorage): ViewModel(), ViewModelUsingAndroidFeatures {
+abstract class BaseViewModel(application: Application, override val androidFeaturesUsedInViewModel: List<AndroidFeature>, private val keyValueStorage: KeyValueStorage): AndroidViewModel(application), ViewModelUsingAndroidFeatures {
 
     private var _missingRuntimePermissions: MutableStateFlow<List<RuntimePermission>> = MutableStateFlow(emptyList())
     override val observeMissingPermissions: StateFlow<List<RuntimePermission>> = _missingRuntimePermissions

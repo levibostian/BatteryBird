@@ -92,10 +92,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:+") // Compose: Android Studio Preview support
     debugImplementation("androidx.compose.ui:ui-tooling:+")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:+") // Compose: Optional - Integration with ViewModels
+    implementation("androidx.activity:activity-compose:+")
     // Compose: UI Tests
     //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     //debugImplementation("androidx.compose.ui:ui-test-manifest")
-    // Copose: Optional - Integration with activities
 
     // Kotlin datetime util
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:+")

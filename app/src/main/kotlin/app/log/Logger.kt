@@ -1,13 +1,14 @@
 package app.log
 
 import android.util.Log
+import app.BuildConfig
 import app.DiGraph
 
 val DiGraph.logger: Logger
     get() = Logger()
 
 class Logger {
-    private val tag = "[bluetooth-battery]" //"[${BuildConfig.APPLICATION_ID}]"
+    private val tag = "[${BuildConfig.APPLICATION_ID}]"
 
     fun <T: Any> debug(message: String, caller: T) {
         Log.d(tag, getMessage(message, caller))

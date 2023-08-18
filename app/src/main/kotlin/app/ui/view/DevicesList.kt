@@ -3,16 +3,24 @@ package app.ui.view
 import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -35,16 +43,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.R
 import app.extensions.findActivity
 import app.extensions.relativeTimeFlow
 import app.extensions.supportEmailIntent
@@ -57,6 +69,7 @@ import app.ui.theme.BatteryLevelLow
 import app.ui.theme.BatteryLevelMedium
 import app.ui.theme.BatteryLevelTrackDark
 import app.ui.theme.BatteryLevelTrackLight
+import app.ui.theme.BatteryLevelUnknown
 import app.ui.type.AnyCTA
 import app.ui.type.ButtonCTA
 import app.ui.type.RuntimePermission
@@ -158,28 +171,44 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
 @Composable
 fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMode: Boolean, onAddDeviceClicked: () -> Unit) {
     Column {
-        LazyColumn {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 140.dp),
+            contentPadding = PaddingValues(5.dp)
+        ) {
             items(bluetoothDevices, key = { it.hardwareAddress }) {
-                Row(Modifier.padding(10.dp)) {
-                    BluetoothBatteryProgressBar(it.batteryLevel, modifier = Modifier
-                        .fillMaxHeight()
-                        .align(Alignment.CenterVertically)
-                        .padding(end = 10.dp))
-
-                    Column {
-                        Row {
-                            Text(text = it.name)
-                            IsDemoView(isDemo = isDemoMode, modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .padding(start = 6.dp))
+                Box(Modifier.padding(5.dp)) {
+                    // make the card have padding for all children on the inside of it.
+                    Card(Modifier.fillMaxSize()) {
+                        Box(
+                            Modifier
+                                .padding(top = 10.dp)
+                                .align(Alignment.CenterHorizontally)) {
+                            BluetoothBatteryProgressBar(it.batteryLevel, modifier = Modifier
+                                .size(80.dp))
                         }
 
-                        DeviceLastConnectedText(it)
+                        Text(
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .align(Alignment.CenterHorizontally),
+                            text = it.name,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            minLines = 2
+                        )
+                    }
+
+                    if (isDemoMode) {
+                        IsDemoView(isDemo = isDemoMode, modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(all = 5.dp))
                     }
                 }
             }
         }
-        
+
         ManuallyAddDeviceView(modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 30.dp)) {
@@ -231,21 +260,6 @@ fun CTAView(cta: AnyCTA, onClick: (AnyCTA) -> Unit, modifier: Modifier = Modifie
 }
 
 @Composable
-fun DeviceLastConnectedText(device: BluetoothDeviceModel) {
-    val isDeviceConnected = device.isConnected
-    val hasDeviceEverBeenConnected = device.lastTimeConnected != null
-    val lastConnectedString = device.lastTimeConnected?.relativeTimeFlow()?.collectAsState(initial = "")
-
-    val text = when {
-        isDeviceConnected -> "Currently connected"
-        hasDeviceEverBeenConnected -> "Last connected ${lastConnectedString?.value ?: ""}"
-        else -> "Connect device to get battery level"
-    }
-    
-    Text(text = text, color = Color.Gray, fontSize = 12.sp)
-}
-
-@Composable
 fun IsDemoView(isDemo: Boolean, modifier: Modifier = Modifier) {
     if (!isDemo) return
 
@@ -254,31 +268,40 @@ fun IsDemoView(isDemo: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 fun BluetoothBatteryProgressBar(batteryLevel: Long?, modifier: Modifier) {
+    val heightOfView = 50.dp
+
     val color: Color = when {
-        batteryLevel == null -> Color.Gray
+        batteryLevel == null -> BatteryLevelUnknown
         batteryLevel <= 20 -> BatteryLevelLow
         batteryLevel <= 40 -> BatteryLevelMedium
         else -> BatteryLevelHigh
     }
 
-    Box(modifier.size(50.dp)) {
-        if (batteryLevel != null) {
-            CircularProgressIndicator(
-                batteryLevel / 100f,
-                color = color,
-                strokeCap = StrokeCap.Round,
-                modifier = Modifier.fillMaxSize(),
-                trackColor = if (isSystemInDarkTheme()) BatteryLevelTrackDark else BatteryLevelTrackLight
-            )
-            Row(
-                Modifier
-                    .align(Alignment.Center)
-                    .padding(start = 4.dp)) {
-                Text(text = "$batteryLevel", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = color)
-                Text(text = "%", fontWeight = FontWeight.Bold, fontSize = 8.sp, color = color, modifier = Modifier
-                    .align(Alignment.Bottom)
-                    .padding(bottom = 3.dp))
-            }
+    if (batteryLevel == null) {
+        Column(modifier.height(heightOfView).padding(top = 20.dp)) {
+            Image(painter = painterResource(id =  R.drawable.not_connected_icon), contentDescription = "", modifier = Modifier.align(CenterHorizontally).size(18.dp))
+            Text(text = "Connect device to get battery level", fontSize = 10.sp, color = color, modifier = Modifier.align(
+                CenterHorizontally))
+        }
+        return
+    }
+
+    Box(modifier.size(heightOfView)) {
+        CircularProgressIndicator(
+            batteryLevel / 100f,
+            color = color,
+            strokeCap = StrokeCap.Round,
+            modifier = Modifier.fillMaxSize(),
+            trackColor = if (isSystemInDarkTheme()) BatteryLevelTrackDark else BatteryLevelTrackLight
+        )
+        Row(
+            Modifier
+                .align(Alignment.Center)
+                .padding(start = 4.dp)) {
+            Text(text = "$batteryLevel", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = color)
+            Text(text = "%", fontWeight = FontWeight.Bold, fontSize = 8.sp, color = color, modifier = Modifier
+                .align(Alignment.Bottom)
+                .padding(bottom = 3.dp))
         }
     }
 }

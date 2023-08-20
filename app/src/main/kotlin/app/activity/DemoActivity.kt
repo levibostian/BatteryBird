@@ -5,9 +5,10 @@ import android.net.Uri
 import android.os.Bundle
 import app.DiGraph
 import app.android.Bluetooth
-import app.android.bluetoothStub
 import app.android.workManager
 import app.diGraph
+import app.store.BluetoothDevicesStore
+import app.store.bluetoothDevicesStoreStub
 
 class DemoActivity: Activity() {
 
@@ -19,7 +20,7 @@ class DemoActivity: Activity() {
 
     // batterybird://demo
     private fun handleDeepLink(deepLink: Uri) {
-        diGraph.override(Bluetooth::class.java, diGraph.bluetoothStub)
+        diGraph.override(BluetoothDevicesStore::class.java, diGraph.bluetoothDevicesStoreStub)
 
         startActivity(MainActivity.getIntent(this))
         finish()

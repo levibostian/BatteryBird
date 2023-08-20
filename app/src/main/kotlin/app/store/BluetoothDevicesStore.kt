@@ -1,9 +1,12 @@
 package app.store
 
 import app.DiGraph
+import app.model.samples.Samples
+import app.model.samples.bluetoothDeviceModels
 import earth.levi.batterybird.BluetoothDeviceModel
 import earth.levi.batterybird.store.DatabaseStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 interface BluetoothDevicesStore {
     var devices: List<BluetoothDeviceModel>
@@ -13,9 +16,9 @@ interface BluetoothDevicesStore {
 }
 
 val DiGraph.bluetoothDevicesStore: BluetoothDevicesStore
-    get() = BluetoothDevicesStoreImpl(database)
+    get() = override() ?: BluetoothDevicesStoreImpl(database)
 
-class BluetoothDevicesStoreImpl(private val database: DatabaseStore): BluetoothDevicesStore {
+open class BluetoothDevicesStoreImpl(private val database: DatabaseStore): BluetoothDevicesStore {
 
     override var devices: List<BluetoothDeviceModel>
         get() = database.bluetoothDevices
@@ -39,5 +42,19 @@ class BluetoothDevicesStoreImpl(private val database: DatabaseStore): BluetoothD
 
     override val observePairedDevices: Flow<List<BluetoothDeviceModel>>
         get() = database.observeBluetoothDevices
+
+}
+
+val DiGraph.bluetoothDevicesStoreStub: BluetoothDevicesStore
+    get() = BluetoothDevicesStoreStub(database)
+
+class BluetoothDevicesStoreStub(database: DatabaseStore): BluetoothDevicesStoreImpl(database) {
+
+    override var devices: List<BluetoothDeviceModel>
+        get() = Samples.bluetoothDeviceModels
+        set(value) {}
+
+    override val observePairedDevices: Flow<List<BluetoothDeviceModel>>
+        get() = flow { emit(Samples.bluetoothDeviceModels) }
 
 }

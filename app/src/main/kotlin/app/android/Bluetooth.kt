@@ -35,7 +35,7 @@ interface Bluetooth: AndroidFeature {
 val DiGraph.bluetooth: Bluetooth
     get() = override() ?: BluetoothImpl(logger, bluetoothManager)
 
-open class BluetoothImpl(private val log: Logger, private val bluetoothManager: BluetoothManager): AndroidFeatureImpl(), Bluetooth {
+class BluetoothImpl(private val log: Logger, private val bluetoothManager: BluetoothManager): AndroidFeatureImpl(), Bluetooth {
 
     // Get this later instead of in the constructor. Getting the bluetooth adapter might return null so we want to try and retrieve it only after
     // we have done checks such as getting permission.
@@ -206,19 +206,6 @@ open class BluetoothImpl(private val log: Logger, private val bluetoothManager: 
         get() = systemBluetoothAdapter.isEnabled
 
     override fun getRequiredPermissions(): List<RuntimePermission> = listOf(RuntimePermission.Bluetooth)
-}
-
-val DiGraph.bluetoothStub: Bluetooth
-    get() = BluetoothSamplesStub(logger, bluetoothManager)
-
-class BluetoothSamplesStub(logger: Logger, bluetoothManager: BluetoothManager): BluetoothImpl(logger, bluetoothManager) {
-
-    var samplePairedDevices: List<BluetoothDeviceModel> = Samples.bluetoothDeviceModels
-
-    override fun canGetPairedDevices(context: Context): Boolean = true
-
-    override fun getPairedDevices(context: Context): Result<List<BluetoothDeviceModel>> = Result.success(samplePairedDevices)
-
 }
 
 // using systemapi function to get battery level. there is risk in using a non-public sdk function, however, logcat has not yet shown a warning from the android source code that the function is hidden and what alternative to use. Therefore, I think there is less risk involved in using at this time. Something to watch.

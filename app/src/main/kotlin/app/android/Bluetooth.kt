@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
-import androidx.annotation.DeprecatedSinceApi
 import app.DiGraph
 import app.extensions.now
 import app.log.Logger

@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "app"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "earth.levi.bluetoothbattery"
         minSdk = 21
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -64,7 +64,7 @@ android {
     }
     composeOptions {
         // This maps to kotlin compiler version https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-        kotlinCompilerExtensionVersion = "1.4.8"
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
     packagingOptions {
         resources {
@@ -96,6 +96,9 @@ dependencies {
     // Compose: UI Tests
     //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     //debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // shared preferences Flow
+    implementation("com.fredporciuncula:flow-preferences:+")
 
     // Kotlin datetime util
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:+")

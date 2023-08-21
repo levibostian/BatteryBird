@@ -37,6 +37,8 @@ class BluetoothDevicesRepositoryImpl(
         devicesStore.devices.forEach { device ->
             updateBatteryLevel(context, device, updateNotifications)
         }
+
+        keyValueStorage.allDeviceBatteryLevelsUpdated()
     }
 
     override suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int? = withContext(Dispatchers.IO) {

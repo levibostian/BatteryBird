@@ -45,7 +45,7 @@ kotlin {
                 implementation("app.cash.sqldelight:android-driver:+")
             }
         }
-        val androidTest by getting
+        val androidUnitTest by getting // there is also androidInstrumentedTest
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -73,7 +73,7 @@ kotlin {
 
 android {
     namespace = "earth.levi.batterybird.store"
-    compileSdk = 33
+    compileSdk = 34
     defaultConfig {
         minSdk = 21
     }

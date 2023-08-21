@@ -2,6 +2,7 @@ package app.extensions
 
 import android.text.format.DateUtils
 import android.text.format.DateUtils.DAY_IN_MILLIS
+import android.text.format.DateUtils.FORMAT_ABBREV_RELATIVE
 import android.text.format.DateUtils.MINUTE_IN_MILLIS
 import android.text.format.DateUtils.SECOND_IN_MILLIS
 import android.text.format.DateUtils.WEEK_IN_MILLIS
@@ -27,9 +28,11 @@ fun Instant.minus(years: Int = 0,
 fun Instant.toRelativeTimeSpanString(): String {
     val millisTimeAgo = this.toEpochMilliseconds()
     val millisNow = now().toEpochMilliseconds()
+    val isLessThen1MinuteAgo = (millisNow - millisTimeAgo) < MINUTE_IN_MILLIS
 
-    DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, SECOND_IN_MILLIS).toString().let { if (it.contains("ago")) return it }
-    DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, MINUTE_IN_MILLIS).toString().let { if (it.contains("ago")) return it }
+    if (isLessThen1MinuteAgo) return "Less then 1 min. ago"
+
+    DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, MINUTE_IN_MILLIS, FORMAT_ABBREV_RELATIVE).toString().let { if (it.contains("ago")) return it }
     DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, DAY_IN_MILLIS).toString().let { if (it.contains("ago")) return it }
     return DateUtils.getRelativeTimeSpanString(millisTimeAgo, millisNow, WEEK_IN_MILLIS).toString()
 }

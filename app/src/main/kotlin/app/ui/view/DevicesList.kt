@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.End
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -58,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.R
 import app.extensions.findActivity
+import app.extensions.minus
+import app.extensions.now
 import app.extensions.relativeTimeFlow
 import app.extensions.supportEmailIntent
 import app.extensions.systemBluetoothSettingsIntent
@@ -78,6 +82,7 @@ import app.ui.widgets.ClickableText
 import app.viewModelFromActivity
 import app.viewmodel.BluetoothDevicesViewModel
 import earth.levi.batterybird.BluetoothDeviceModel
+import kotlinx.datetime.Instant
 
 @Composable
 fun DevicesList(onAddDeviceClicked: () -> Unit) {
@@ -85,6 +90,7 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
 
     val bluetoothDevices = bluetoothDevicesViewModel.observePairedDevices.collectAsState()
     val isDemoMode = bluetoothDevicesViewModel.isDemoMode.collectAsState()
+    val lastTimeAllDeviceBatteryLevelsUpdated = bluetoothDevicesViewModel.observeLastTimeAllDevicesBatteryLevelUpdated.collectAsState()
     val context = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
@@ -114,6 +120,7 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
 
     DevicesList(
         bluetoothDevices = bluetoothDevices.value,
+        lastTimeAllDeviceBatteryLevelsUpdated = lastTimeAllDeviceBatteryLevelsUpdated.value,
         isDemoMode = isDemoMode.value,
         setupCTAs = missingPermissionCtas,
         ctaActionOnClick = { ctaClicked ->
@@ -136,12 +143,16 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
 
 @Composable
 fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
+                lastTimeAllDeviceBatteryLevelsUpdated: Instant?,
                 isDemoMode: Boolean,
                 setupCTAs: List<AnyCTA>,
                 ctaActionOnClick: (AnyCTA) -> Unit,
                 toolbarBluetoothSettingsOnClick: () -> Unit,
                 contactUsOnClick: () -> Unit,
                 onAddDeviceClicked: () -> Unit) {
+
+    val humanReadableLastTimeAllDeviceBatteryLevelsUpdated = lastTimeAllDeviceBatteryLevelsUpdated?.relativeTimeFlow()?.collectAsState(initial = null)
+
     Scaffold(
         topBar = { BluetoothDevicesTopAppBar(
             systemBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick,
@@ -153,16 +164,24 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
                 .padding(top = contentPadding.calculateTopPadding())
                 .fillMaxSize()) {
 
-            Box(Modifier.weight(1f)) {
-                if (bluetoothDevices.isEmpty()) {
-                    ListEmptyView(openBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick)
-                } else {
-                    BluetoothDevicesList(bluetoothDevices = bluetoothDevices, isDemoMode = isDemoMode, onAddDeviceClicked = onAddDeviceClicked)
-                }
+            if (!isDemoMode && humanReadableLastTimeAllDeviceBatteryLevelsUpdated != null) {
+                Text(text = "Battery levels updated: ${humanReadableLastTimeAllDeviceBatteryLevelsUpdated.value}", modifier = Modifier
+                    .align(End)
+                    .padding(end = 10.dp))
             }
 
-            setupCTAs.firstOrNull()?.let { cta ->
-                CTAView(cta = cta, onClick = ctaActionOnClick, modifier = Modifier.padding(vertical = 20.dp, horizontal = 20.dp))
+            Column {
+                Box(Modifier.weight(1f)) {
+                    if (bluetoothDevices.isEmpty()) {
+                        ListEmptyView(openBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick)
+                    } else {
+                        BluetoothDevicesList(bluetoothDevices = bluetoothDevices, isDemoMode = isDemoMode, onAddDeviceClicked = onAddDeviceClicked)
+                    }
+                }
+
+                setupCTAs.firstOrNull()?.let { cta ->
+                    CTAView(cta = cta, onClick = ctaActionOnClick, modifier = Modifier.padding(vertical = 20.dp, horizontal = 20.dp))
+                }
             }
         }
     }
@@ -278,8 +297,13 @@ fun BluetoothBatteryProgressBar(batteryLevel: Long?, modifier: Modifier) {
     }
 
     if (batteryLevel == null) {
-        Column(modifier.height(heightOfView).padding(top = 20.dp)) {
-            Image(painter = painterResource(id =  R.drawable.not_connected_icon), contentDescription = "", modifier = Modifier.align(CenterHorizontally).size(18.dp))
+        Column(
+            modifier
+                .height(heightOfView)
+                .padding(top = 20.dp)) {
+            Image(painter = painterResource(id =  R.drawable.not_connected_icon), contentDescription = "", modifier = Modifier
+                .align(CenterHorizontally)
+                .size(18.dp))
             Text(text = "Connect device to get battery level", fontSize = 10.sp, color = color, modifier = Modifier.align(
                 CenterHorizontally))
         }
@@ -343,6 +367,7 @@ fun MiscMenuOptionsDropdown(expanded: Boolean, onDismissRequest: () -> Unit, sys
 fun DevicesListPhonePreview() {
     DevicesList(
         bluetoothDevices = Samples.bluetoothDevices,
+        lastTimeAllDeviceBatteryLevelsUpdated = now().minus(minutes = 1),
         isDemoMode = true,
         setupCTAs = listOf(RuntimePermissionCTA.sample), {},  {}, {}, {})
 }
@@ -355,6 +380,7 @@ fun DevicesListPhonePreview() {
 fun DevicesListEmptyViewPreview() {
     DevicesList(
         bluetoothDevices = emptyList(),
+        lastTimeAllDeviceBatteryLevelsUpdated = now().minus(minutes = 1),
         isDemoMode = true,
         setupCTAs =  listOf(RuntimePermissionCTA.sample), {},  {}, {}, {})
 }

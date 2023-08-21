@@ -41,7 +41,7 @@ class BluetoothDevicesViewModel(
     private val bluetoothDevicesRepository: BluetoothDevicesRepository,
     private val logger: Logger,
     application: Application,
-    keyValueStorage: KeyValueStorage,
+    val keyValueStorage: KeyValueStorage,
     bluetooth: Bluetooth,
     notifications: AndroidNotifications
     ): BaseViewModel(application, androidFeaturesUsedInViewModel = listOf(bluetooth, notifications), keyValueStorage) {
@@ -49,6 +49,7 @@ class BluetoothDevicesViewModel(
     // Set demo data so the app has something to show in the UI
     private var _pairedDevices = MutableStateFlow(Samples.bluetoothDevices)
     private var _isDemoMode = MutableStateFlow(true)
+    private var _observeLastTimeAllDevicesBatteryLevelUpdated: MutableStateFlow<Instant?> = MutableStateFlow(null)
 
     val isDemoMode: StateFlow<Boolean>
         get() = _isDemoMode
@@ -56,8 +57,12 @@ class BluetoothDevicesViewModel(
     val observePairedDevices: StateFlow<List<BluetoothDeviceModel>>
         get() = _pairedDevices
 
+    val observeLastTimeAllDevicesBatteryLevelUpdated: StateFlow<Instant?>
+        get() = _observeLastTimeAllDevicesBatteryLevelUpdated
+
     init {
         startObservingPairedBluetoothDevices()
+        startObservingLastTimeAllDevicesBatteryLevelUpdated()
     }
 
     override fun updateMissingPermissions(activity: Activity) {
@@ -95,6 +100,14 @@ class BluetoothDevicesViewModel(
             bluetoothDevicesStore.observePairedDevices.collect { pairedDevices ->
                 _pairedDevices.value = pairedDevices.ifEmpty { Samples.bluetoothDevices }
                 _isDemoMode.value = pairedDevices.isEmpty()
+            }
+        }
+    }
+
+    private fun startObservingLastTimeAllDevicesBatteryLevelUpdated() {
+        viewModelScope.launch(Dispatchers.IO) {
+            keyValueStorage.observeLastTimeAllDevicesBatteryLevelUpdated.collect { lastTimeAllDevicesBatteryLevelUpdated ->
+                _observeLastTimeAllDevicesBatteryLevelUpdated.value = lastTimeAllDevicesBatteryLevelUpdated
             }
         }
     }

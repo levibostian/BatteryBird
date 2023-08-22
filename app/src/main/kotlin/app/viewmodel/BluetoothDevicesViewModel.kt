@@ -112,4 +112,8 @@ class BluetoothDevicesViewModel(
         }
     }
 
+    fun updateDeviceName(deviceToEditName: BluetoothDeviceModel, newName: String) {
+        bluetoothDevicesStore.updateDevice(deviceToEditName.copy(name = newName))
+    }
+
 }

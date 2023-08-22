@@ -20,6 +20,7 @@ INSERT INTO BluetoothDeviceModel (hardwareAddress, name, batteryLevel, isConnect
 VALUES (:hardwareAddress, :name, :batteryLevel, :isConnected, :lastTimeConnected)
 ON CONFLICT(hardwareAddress) DO UPDATE SET
     isConnected = :isConnected,
+    name = COALESCE(:name, name),
     batteryLevel = COALESCE(:batteryLevel, batteryLevel),
     lastTimeConnected = COALESCE(:lastTimeConnected, lastTimeConnected);
 

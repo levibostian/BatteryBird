@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -93,6 +95,8 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
     val lastTimeAllDeviceBatteryLevelsUpdated = bluetoothDevicesViewModel.observeLastTimeAllDevicesBatteryLevelUpdated.collectAsState()
     val context = LocalContext.current
 
+    var deviceToEditName: BluetoothDeviceModel? by remember { mutableStateOf(null) }
+
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -137,8 +141,22 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
         contactUsOnClick = {
             context.startActivity(supportEmailIntent())
         },
-        onAddDeviceClicked = onAddDeviceClicked
+        onAddDeviceClicked = onAddDeviceClicked,
+        onDeviceNameClicked = {
+            deviceToEditName = it
+        }
     )
+
+    deviceToEditName?.let {
+        EditDeviceNameDialog(
+            currentDeviceName = it.name,
+            done = { newName ->
+                deviceToEditName = null
+                val newName = newName ?: return@EditDeviceNameDialog
+                bluetoothDevicesViewModel.updateDeviceName(it, newName)
+            }
+        )
+    }
 }
 
 @Composable
@@ -149,7 +167,8 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
                 ctaActionOnClick: (AnyCTA) -> Unit,
                 toolbarBluetoothSettingsOnClick: () -> Unit,
                 contactUsOnClick: () -> Unit,
-                onAddDeviceClicked: () -> Unit) {
+                onAddDeviceClicked: () -> Unit,
+                onDeviceNameClicked: (BluetoothDeviceModel) -> Unit) {
 
     val humanReadableLastTimeAllDeviceBatteryLevelsUpdated = lastTimeAllDeviceBatteryLevelsUpdated?.relativeTimeFlow()?.collectAsState(initial = null)
 
@@ -175,7 +194,7 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
                     if (bluetoothDevices.isEmpty()) {
                         ListEmptyView(openBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick)
                     } else {
-                        BluetoothDevicesList(bluetoothDevices = bluetoothDevices, isDemoMode = isDemoMode, onAddDeviceClicked = onAddDeviceClicked)
+                        BluetoothDevicesList(bluetoothDevices = bluetoothDevices, isDemoMode = isDemoMode, onAddDeviceClicked = onAddDeviceClicked, onDeviceNameClicked = onDeviceNameClicked)
                     }
                 }
 
@@ -188,7 +207,7 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
 }
 
 @Composable
-fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMode: Boolean, onAddDeviceClicked: () -> Unit) {
+fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMode: Boolean, onAddDeviceClicked: () -> Unit, onDeviceNameClicked: (BluetoothDeviceModel) -> Unit) {
     Column {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 140.dp),
@@ -209,7 +228,10 @@ fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMod
                         Text(
                             modifier = Modifier
                                 .padding(5.dp)
-                                .align(Alignment.CenterHorizontally),
+                                .align(Alignment.CenterHorizontally)
+                                .clickable {
+                                    onDeviceNameClicked(it)
+                                },
                             text = it.name,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
@@ -249,7 +271,7 @@ fun ManuallyAddDeviceView(modifier: Modifier = Modifier, onClick: () -> Unit) {
 @Composable
 fun ListEmptyView(openBluetoothSettingsOnClick: () -> Unit) {
     Box {
-        BluetoothDevicesList(bluetoothDevices = Samples.bluetoothDevices, isDemoMode = true, onAddDeviceClicked = {})
+        BluetoothDevicesList(bluetoothDevices = Samples.bluetoothDevices, isDemoMode = true, onAddDeviceClicked = {}, onDeviceNameClicked = {})
 
         CTAView(
             cta = ButtonCTA(
@@ -369,7 +391,7 @@ fun DevicesListPhonePreview() {
         bluetoothDevices = Samples.bluetoothDevices,
         lastTimeAllDeviceBatteryLevelsUpdated = now().minus(minutes = 1),
         isDemoMode = true,
-        setupCTAs = listOf(RuntimePermissionCTA.sample), {},  {}, {}, {})
+        setupCTAs = listOf(RuntimePermissionCTA.sample), {},  {}, {}, {}, {})
 }
 
 @Composable
@@ -382,5 +404,5 @@ fun DevicesListEmptyViewPreview() {
         bluetoothDevices = emptyList(),
         lastTimeAllDeviceBatteryLevelsUpdated = now().minus(minutes = 1),
         isDemoMode = true,
-        setupCTAs =  listOf(RuntimePermissionCTA.sample), {},  {}, {}, {})
+        setupCTAs =  listOf(RuntimePermissionCTA.sample), {},  {}, {}, {}, {})
 }

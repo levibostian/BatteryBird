@@ -19,6 +19,10 @@ class DatabaseStore(private val db: Database) {
     val observeBluetoothDevices: Flow<List<BluetoothDeviceModel>>
         get() = db.bluetoothDeviceQueries.getAll().asFlow().mapToList(Dispatchers.IO)
 
+    fun updateNotificationBatteryLevel(device: BluetoothDeviceModel, notificationBatteryLevel: Int?) {
+        db.bluetoothDeviceQueries.updateNotificationBatteryLevel(notificationBatteryLevel?.toLong(), device.hardwareAddress)
+    }
+
     fun deleteAll() {
         db.transaction {
             db.bluetoothDeviceQueries.deleteAll()

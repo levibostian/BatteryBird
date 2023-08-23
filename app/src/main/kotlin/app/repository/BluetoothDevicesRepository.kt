@@ -6,6 +6,7 @@ import app.DiGraph
 import app.android.Bluetooth
 import app.android.bluetooth
 import app.extensions.now
+import app.model.notificationBatteryLevelOrDefault
 import app.notifications.AppNotifications
 import app.notifications.notifications
 import app.store.BluetoothDevicesStore
@@ -13,6 +14,7 @@ import app.store.KeyValueStorage
 import app.store.bluetoothDevicesStore
 import app.store.keyValueStorage
 import earth.levi.batterybird.BluetoothDeviceModel
+import earth.levi.batterybird.store.DatabaseStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -20,14 +22,16 @@ import kotlinx.coroutines.withContext
 interface BluetoothDevicesRepository {
     suspend fun updateAllBatteryLevels(context: Context, updateNotifications: Boolean)
     suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int?
+    suspend fun updateNotificationBatteryLevel(device: BluetoothDeviceModel, notificationBatteryLevel: Int?)
 }
 
 val DiGraph.bluetoothDevicesRepository: BluetoothDevicesRepository
-    get() = override() ?: BluetoothDevicesRepositoryImpl(bluetooth, bluetoothDevicesStore, notifications, keyValueStorage)
+    get() = override() ?: BluetoothDevicesRepositoryImpl(bluetooth, bluetoothDevicesStore, database, notifications, keyValueStorage)
 
 class BluetoothDevicesRepositoryImpl(
     private val bluetooth: Bluetooth,
     private val devicesStore: BluetoothDevicesStore,
+    private val database: DatabaseStore,
     private val notifications: AppNotifications,
     private val keyValueStorage: KeyValueStorage): BluetoothDevicesRepository {
 
@@ -58,7 +62,7 @@ class BluetoothDevicesRepositoryImpl(
             // * Re-run app in android studio. The app restarts with no notifications shown. This function tries to re-show the notifications.
             val batteryLevel: Int? = newBatteryLevelIfDeviceConnected ?: cachedBatteryLevel
 
-            if (batteryLevel != null && batteryLevel <= 20) {
+            if (batteryLevel != null && batteryLevel <= device.notificationBatteryLevelOrDefault) { // repository sets default notification battery level
                 // To avoid annoying the user, there is an ignore action button added to notification. If pressed, we do not show the notification again
                 // until th device charges again. Check if we should ignore showing the notification.
                 if (!keyValueStorage.isLowBatteryAlertIgnoredForDevice(device)) {
@@ -77,6 +81,13 @@ class BluetoothDevicesRepositoryImpl(
         }
 
         newBatteryLevelIfDeviceConnected
+    }
+
+    override suspend fun updateNotificationBatteryLevel(
+        device: BluetoothDeviceModel,
+        notificationBatteryLevel: Int?
+    ) {
+        database.updateNotificationBatteryLevel(device, notificationBatteryLevel)
     }
 
     private suspend fun insertPairedDevicesIntoDB(context: Context) = withContext(Dispatchers.IO) {

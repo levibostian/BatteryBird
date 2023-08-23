@@ -87,6 +87,7 @@ class BluetoothDevicesViewModel(
                 name = "Added device, $hardwareAddress",
                 isConnected = false,
                 batteryLevel = null,
+                notificationBatteryLevel = null,
                 lastTimeConnected = null
             )
 
@@ -114,6 +115,10 @@ class BluetoothDevicesViewModel(
 
     fun updateDeviceName(deviceToEditName: BluetoothDeviceModel, newName: String) {
         bluetoothDevicesStore.updateDevice(deviceToEditName.copy(name = newName))
+    }
+
+    fun updateDeviceNotificationBatteryLevel(device: BluetoothDeviceModel, newLevel: Int) = viewModelScope.launch {
+        bluetoothDevicesRepository.updateNotificationBatteryLevel(device, newLevel)
     }
 
 }

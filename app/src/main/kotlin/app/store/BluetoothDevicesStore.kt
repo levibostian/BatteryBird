@@ -7,6 +7,7 @@ import earth.levi.batterybird.BluetoothDeviceModel
 import earth.levi.batterybird.store.DatabaseStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 interface BluetoothDevicesStore {
     var devices: List<BluetoothDeviceModel>
@@ -42,7 +43,6 @@ open class BluetoothDevicesStoreImpl(private val database: DatabaseStore): Bluet
 
     override val observePairedDevices: Flow<List<BluetoothDeviceModel>>
         get() = database.observeBluetoothDevices
-
 }
 
 val DiGraph.bluetoothDevicesStoreStub: BluetoothDevicesStore

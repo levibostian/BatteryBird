@@ -87,6 +87,7 @@ sqldelight {
             // find version of sqlite can use for Android: https://developer.android.com/reference/android/database/sqlite/package-summary
             // for ios: https://stackoverflow.com/questions/14288128/what-version-of-sqlite-does-ios-provide
             dialect("app.cash.sqldelight:sqlite-3-24-dialect:+")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
         }
     }
 }

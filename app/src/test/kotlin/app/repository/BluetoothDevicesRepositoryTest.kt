@@ -33,7 +33,7 @@ class BluetoothDevicesRepositoryTest: BaseTest() {
     override fun setup() {
         super.setup()
         
-        repository = BluetoothDevicesRepositoryImpl(bluetoothMock, di.bluetoothDevicesStore, notificationsMock, keyValueStorage)
+        repository = BluetoothDevicesRepositoryImpl(bluetoothMock, di.bluetoothDevicesStore, di.database, notificationsMock, keyValueStorage)
     }
 
     // updateBatteryLevel

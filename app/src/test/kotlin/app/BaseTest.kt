@@ -36,6 +36,7 @@ abstract class BaseTest {
     @After
     open fun teardown() {
         keyValueStorage.deleteAll()
+        di.database.deleteAll()
     }
 
 }

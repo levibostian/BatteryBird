@@ -57,6 +57,7 @@ class BluetoothImpl(private val log: Logger, private val bluetoothManager: Bluet
                 name = pairedDevice.name,
                 batteryLevel = null, // we have to update the battery level in a separate call because it's an async operation.
                 isConnected = pairedDevice.isConnected,
+                notificationBatteryLevel = null,
                 lastTimeConnected = if (pairedDevice.isConnected) now() else null
             )
         })

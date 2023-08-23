@@ -68,6 +68,7 @@ import app.extensions.relativeTimeFlow
 import app.extensions.supportEmailIntent
 import app.extensions.systemBluetoothSettingsIntent
 import app.extensions.toRelativeTimeSpanString
+import app.model.notificationBatteryLevelOrDefault
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
 import app.ui.theme.BatteryLevelHigh
@@ -96,6 +97,7 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
     val context = LocalContext.current
 
     var deviceToEditName: BluetoothDeviceModel? by remember { mutableStateOf(null) }
+    var deviceToEditNotificationBatteryLevel: BluetoothDeviceModel? by remember { mutableStateOf(null) }
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -144,6 +146,9 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
         onAddDeviceClicked = onAddDeviceClicked,
         onDeviceNameClicked = {
             deviceToEditName = it
+        },
+        onNotificationBatteryLevelClick = {
+            deviceToEditNotificationBatteryLevel = it
         }
     )
 
@@ -154,6 +159,17 @@ fun DevicesList(onAddDeviceClicked: () -> Unit) {
                 deviceToEditName = null
                 val newName = newName ?: return@EditDeviceNameDialog
                 bluetoothDevicesViewModel.updateDeviceName(it, newName)
+            }
+        )
+    }
+
+    deviceToEditNotificationBatteryLevel?.let {
+        EditDeviceNotificationBatteryLevelDialog(
+            currentDeviceNotificationBatteryLevel = it.notificationBatteryLevelOrDefault,
+            done = { newLevel ->
+                deviceToEditNotificationBatteryLevel = null
+                val newLevel = newLevel ?: return@EditDeviceNotificationBatteryLevelDialog
+                bluetoothDevicesViewModel.updateDeviceNotificationBatteryLevel(it, newLevel)
             }
         )
     }
@@ -168,7 +184,8 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
                 toolbarBluetoothSettingsOnClick: () -> Unit,
                 contactUsOnClick: () -> Unit,
                 onAddDeviceClicked: () -> Unit,
-                onDeviceNameClicked: (BluetoothDeviceModel) -> Unit) {
+                onDeviceNameClicked: (BluetoothDeviceModel) -> Unit,
+                onNotificationBatteryLevelClick: (BluetoothDeviceModel) -> Unit) {
 
     val humanReadableLastTimeAllDeviceBatteryLevelsUpdated = lastTimeAllDeviceBatteryLevelsUpdated?.relativeTimeFlow()?.collectAsState(initial = null)
 
@@ -194,7 +211,7 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
                     if (bluetoothDevices.isEmpty()) {
                         ListEmptyView(openBluetoothSettingsOnClick = toolbarBluetoothSettingsOnClick)
                     } else {
-                        BluetoothDevicesList(bluetoothDevices = bluetoothDevices, isDemoMode = isDemoMode, onAddDeviceClicked = onAddDeviceClicked, onDeviceNameClicked = onDeviceNameClicked)
+                        BluetoothDevicesList(bluetoothDevices = bluetoothDevices, isDemoMode = isDemoMode, onAddDeviceClicked = onAddDeviceClicked, onDeviceNameClicked = onDeviceNameClicked, onNotificationBatteryLevelClick = onNotificationBatteryLevelClick)
                     }
                 }
 
@@ -207,7 +224,7 @@ fun DevicesList(bluetoothDevices: List<BluetoothDeviceModel>,
 }
 
 @Composable
-fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMode: Boolean, onAddDeviceClicked: () -> Unit, onDeviceNameClicked: (BluetoothDeviceModel) -> Unit) {
+fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMode: Boolean, onAddDeviceClicked: () -> Unit, onDeviceNameClicked: (BluetoothDeviceModel) -> Unit, onNotificationBatteryLevelClick: (BluetoothDeviceModel) -> Unit) {
     Column {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 140.dp),
@@ -221,8 +238,10 @@ fun BluetoothDevicesList(bluetoothDevices: List<BluetoothDeviceModel>, isDemoMod
                             Modifier
                                 .padding(top = 10.dp)
                                 .align(Alignment.CenterHorizontally)) {
-                            BluetoothBatteryProgressBar(it.batteryLevel, modifier = Modifier
-                                .size(80.dp))
+                            BluetoothBatteryProgressBar(it.batteryLevel, it.notificationBatteryLevelOrDefault, modifier = Modifier
+                                .size(80.dp)) {
+                                onNotificationBatteryLevelClick(it)
+                            }
                         }
 
                         Text(
@@ -271,7 +290,7 @@ fun ManuallyAddDeviceView(modifier: Modifier = Modifier, onClick: () -> Unit) {
 @Composable
 fun ListEmptyView(openBluetoothSettingsOnClick: () -> Unit) {
     Box {
-        BluetoothDevicesList(bluetoothDevices = Samples.bluetoothDevices, isDemoMode = true, onAddDeviceClicked = {}, onDeviceNameClicked = {})
+        BluetoothDevicesList(bluetoothDevices = Samples.bluetoothDevices, isDemoMode = true, onAddDeviceClicked = {}, onDeviceNameClicked = {}, onNotificationBatteryLevelClick = {})
 
         CTAView(
             cta = ButtonCTA(
@@ -308,7 +327,7 @@ fun IsDemoView(isDemo: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BluetoothBatteryProgressBar(batteryLevel: Long?, modifier: Modifier) {
+fun BluetoothBatteryProgressBar(batteryLevel: Long?, notificationBatteryLevel: Int, modifier: Modifier, onNotificationBatteryLevelClick: () -> Unit) {
     val heightOfView = 50.dp
 
     val color: Color = when {
@@ -332,7 +351,9 @@ fun BluetoothBatteryProgressBar(batteryLevel: Long?, modifier: Modifier) {
         return
     }
 
-    Box(modifier.size(heightOfView)) {
+    Box(modifier.size(heightOfView).clickable {
+        onNotificationBatteryLevelClick()
+    }) {
         CircularProgressIndicator(
             batteryLevel / 100f,
             color = color,
@@ -340,14 +361,18 @@ fun BluetoothBatteryProgressBar(batteryLevel: Long?, modifier: Modifier) {
             modifier = Modifier.fillMaxSize(),
             trackColor = if (isSystemInDarkTheme()) BatteryLevelTrackDark else BatteryLevelTrackLight
         )
-        Row(
-            Modifier
-                .align(Alignment.Center)
-                .padding(start = 4.dp)) {
-            Text(text = "$batteryLevel", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = color)
-            Text(text = "%", fontWeight = FontWeight.Bold, fontSize = 8.sp, color = color, modifier = Modifier
-                .align(Alignment.Bottom)
-                .padding(bottom = 3.dp))
+        Column(Modifier.align(Center)) {
+            Row(Modifier.padding(start = 6.dp)) {
+                Text(text = "$batteryLevel", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = color)
+                Text(text = "%", fontWeight = FontWeight.Bold, fontSize = 8.sp, color = color, modifier = Modifier
+                    .align(Alignment.Bottom)
+                    .padding(bottom = 3.dp))
+            }
+
+            Row {
+                Image(painterResource(id = R.drawable.ic_action_name), contentDescription = "", modifier = Modifier.size(12.dp).padding(top = 4.dp))
+                Text(text = "$notificationBatteryLevel%", fontSize = 10.sp, color = Color.Gray)
+            }
         }
     }
 }
@@ -391,7 +416,7 @@ fun DevicesListPhonePreview() {
         bluetoothDevices = Samples.bluetoothDevices,
         lastTimeAllDeviceBatteryLevelsUpdated = now().minus(minutes = 1),
         isDemoMode = true,
-        setupCTAs = listOf(RuntimePermissionCTA.sample), {},  {}, {}, {}, {})
+        setupCTAs = listOf(RuntimePermissionCTA.sample), {},  {}, {}, {}, {}, {})
 }
 
 @Composable
@@ -404,5 +429,5 @@ fun DevicesListEmptyViewPreview() {
         bluetoothDevices = emptyList(),
         lastTimeAllDeviceBatteryLevelsUpdated = now().minus(minutes = 1),
         isDemoMode = true,
-        setupCTAs =  listOf(RuntimePermissionCTA.sample), {},  {}, {}, {}, {})
+        setupCTAs =  listOf(RuntimePermissionCTA.sample), {},  {}, {}, {}, {}, {})
 }

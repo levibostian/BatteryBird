@@ -20,6 +20,14 @@ jobs:
         require_tests: true 
         check_name: "Unit test results"
 
+# Sqldelight comes with a gradle task that verifies migration files match schema for each version. 
+  sql-migration-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/setup-android
+    - run: ./gradlew :store:verifyCommonMainDatabaseMigration
+
   build-app:
     runs-on: ubuntu-latest
     steps:

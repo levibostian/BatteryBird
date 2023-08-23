@@ -6,7 +6,8 @@ CREATE TABLE BluetoothDeviceModel (
   name TEXT NOT NULL,
   batteryLevel INTEGER,
   isConnected INTEGER AS Boolean NOT NULL DEFAULT 0, --- default false
-  lastTimeConnected TEXT AS Instant
+  lastTimeConnected TEXT AS Instant,
+  notificationBatteryLevel INTEGER
 );
 
 getAll:
@@ -23,6 +24,9 @@ ON CONFLICT(hardwareAddress) DO UPDATE SET
     name = COALESCE(:name, name),
     batteryLevel = COALESCE(:batteryLevel, batteryLevel),
     lastTimeConnected = COALESCE(:lastTimeConnected, lastTimeConnected);
+
+updateNotificationBatteryLevel:
+UPDATE BluetoothDeviceModel SET notificationBatteryLevel = :notificationBatteryLevel WHERE hardwareAddress = :hardwareAddress;
 
 deleteAll:
 DELETE FROM BluetoothDeviceModel;

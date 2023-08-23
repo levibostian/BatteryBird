@@ -6,8 +6,8 @@ CREATE TABLE BluetoothDeviceModel (
   name TEXT NOT NULL,
   batteryLevel INTEGER,
   isConnected INTEGER AS Boolean NOT NULL DEFAULT 0, --- default false
-  notificationBatteryLevel INTEGER, -- TODO: make migration
-  lastTimeConnected TEXT AS Instant
+  lastTimeConnected TEXT AS Instant,
+  notificationBatteryLevel INTEGER
 );
 
 getAll:

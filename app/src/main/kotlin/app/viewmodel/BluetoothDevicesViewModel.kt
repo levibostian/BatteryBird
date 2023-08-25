@@ -20,9 +20,7 @@ import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
 import app.repository.BluetoothDevicesRepository
 import app.repository.bluetoothDevicesRepository
-import app.store.BluetoothDevicesStore
 import app.store.KeyValueStorage
-import app.store.bluetoothDevicesStore
 import app.store.keyValueStorage
 import earth.levi.batterybird.BluetoothDeviceModel
 import kotlinx.coroutines.Dispatchers
@@ -34,10 +32,9 @@ import kotlinx.datetime.Instant
 import kotlin.math.log
 
 val DiGraph.bluetoothDevicesViewModel: BluetoothDevicesViewModel
-    get() = BluetoothDevicesViewModel(bluetoothDevicesStore, bluetoothDevicesRepository, logger, application, keyValueStorage, bluetooth, androidNotifications)
+    get() = BluetoothDevicesViewModel(bluetoothDevicesRepository, logger, application, keyValueStorage, bluetooth, androidNotifications)
 
 class BluetoothDevicesViewModel(
-    private val bluetoothDevicesStore: BluetoothDevicesStore,
     private val bluetoothDevicesRepository: BluetoothDevicesRepository,
     private val logger: Logger,
     application: Application,
@@ -91,14 +88,14 @@ class BluetoothDevicesViewModel(
                 lastTimeConnected = null
             )
 
-            bluetoothDevicesStore.manuallyAddDevice(model)
+            bluetoothDevicesRepository.manuallyAddDevice(model)
             updateBatteryLevels() // update battery level right away so we can show it in the UI after adding
         }
     }
 
     private fun startObservingPairedBluetoothDevices() {
         viewModelScope.launch(Dispatchers.IO) {
-            bluetoothDevicesStore.observePairedDevices.collect { pairedDevices ->
+            bluetoothDevicesRepository.observePairedDevices.collect { pairedDevices ->
                 _pairedDevices.value = pairedDevices.ifEmpty { Samples.bluetoothDevices }
                 _isDemoMode.value = pairedDevices.isEmpty()
             }
@@ -113,8 +110,8 @@ class BluetoothDevicesViewModel(
         }
     }
 
-    fun updateDeviceName(deviceToEditName: BluetoothDeviceModel, newName: String) {
-        bluetoothDevicesStore.updateDevice(deviceToEditName.copy(name = newName))
+    fun updateDeviceName(deviceToEditName: BluetoothDeviceModel, newName: String) = viewModelScope.launch {
+        bluetoothDevicesRepository.updateName(deviceToEditName, newName)
     }
 
     fun updateDeviceNotificationBatteryLevel(device: BluetoothDeviceModel, newLevel: Int) = viewModelScope.launch {

@@ -13,20 +13,29 @@ CREATE TABLE BluetoothDeviceModel (
 getAll:
 SELECT * FROM BluetoothDeviceModel;
 
+insert:
+INSERT OR IGNORE INTO BluetoothDeviceModel (hardwareAddress, name) VALUES (:hardwareAddress, :name);
+
 -- When device is not conneted, battery level and last time connected are null.
 -- However, we want to preserve those non-null vales from *the last time* the device *was* connected.
 -- So we use COALESCE to preserve the non-null values from the previous insert/update.
-insertOrReplace:
+--
+-- We are using an INSERT query to do an update. Confusing, yes, but this was the way that I found for sqldelight
+-- to allow me to use strong data types (ex. Instant) in the query.
+-- We do not expect the query to ever insert but instead always perform an update.
+updateBatteryStatus:
 INSERT INTO BluetoothDeviceModel (hardwareAddress, name, batteryLevel, isConnected, lastTimeConnected)
 VALUES (:hardwareAddress, :name, :batteryLevel, :isConnected, :lastTimeConnected)
 ON CONFLICT(hardwareAddress) DO UPDATE SET
     isConnected = :isConnected,
-    name = COALESCE(:name, name),
     batteryLevel = COALESCE(:batteryLevel, batteryLevel),
     lastTimeConnected = COALESCE(:lastTimeConnected, lastTimeConnected);
 
 updateNotificationBatteryLevel:
 UPDATE BluetoothDeviceModel SET notificationBatteryLevel = :notificationBatteryLevel WHERE hardwareAddress = :hardwareAddress;
+
+updateName:
+UPDATE BluetoothDeviceModel SET name = :name WHERE hardwareAddress = :hardwareAddress;
 
 deleteAll:
 DELETE FROM BluetoothDeviceModel;

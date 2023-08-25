@@ -55,7 +55,7 @@ open class BluetoothDevicesRepositoryImpl(
         database.insert(listOf(bluetoothDevice))
     }
 
-    private suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int? = withContext(Dispatchers.IO) {
+    internal suspend fun updateBatteryLevel(context: Context, device: BluetoothDeviceModel, updateNotifications: Boolean): Int? = withContext(Dispatchers.IO) {
         val newBatteryLevelIfDeviceConnected = bluetooth.getBatteryLevel(context, device)
         val cachedBatteryLevel = device.batteryLevel?.toInt()
 

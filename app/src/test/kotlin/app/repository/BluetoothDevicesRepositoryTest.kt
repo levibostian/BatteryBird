@@ -11,7 +11,6 @@ import app.mock
 import app.model.samples.Samples
 import app.model.samples.bluetoothDevices
 import app.notifications.AppNotifications
-import app.store.bluetoothDevicesStore
 import app.verifyDidNotHappen
 import earth.levi.batterybird.BluetoothDeviceModel
 import io.mockk.coEvery
@@ -27,13 +26,13 @@ class BluetoothDevicesRepositoryTest: BaseTest() {
     val bluetoothMock = mock<Bluetooth>()
     val notificationsMock = mock<AppNotifications>()
 
-    lateinit var repository: BluetoothDevicesRepository
+    lateinit var repository: BluetoothDevicesRepositoryImpl
 
     @Before
     override fun setup() {
         super.setup()
         
-        repository = BluetoothDevicesRepositoryImpl(bluetoothMock, di.bluetoothDevicesStore, di.database, notificationsMock, keyValueStorage)
+        repository = BluetoothDevicesRepositoryImpl(bluetoothMock, di.database, notificationsMock, keyValueStorage)
     }
 
     // updateBatteryLevel

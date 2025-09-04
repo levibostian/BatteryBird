@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/levibostian/BatteryBird/">
-    <img src="https://raw.githubusercontent.com/levibostian/BatteryBird/main/docs/img/header.png?token=GHSAT0AAAAAACCTE2ZKBUX2MQKQFNZLVLSIZEJXB5A">
+    <img src="https://raw.githubusercontent.com/levibostian/BatteryBird/main/docs/img/header.png">
   </a>
 </p>
 
@@ -57,3 +57,7 @@ Bluetooth devices come with a name that was created by the manufacturer. Sometim
 * **fastlane** to build and ship the app to Google Play from **GitHub Actions**
 * **Kotlin Multiplatform Mobile (KMM)** to implement the app's data store. Created to re-use the logic on other platforms such as iOS if I ever decided to build an iOS or macOS version of this app. 
 
+# Update dependencies
+
+- install [task](https://taskfile.dev/docs/installation) 
+- run: `task update-lock-versions`

@@ -13,8 +13,8 @@ android {
         applicationId = "earth.levi.bluetoothbattery"
         minSdk = 21
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = System.getenv("ANDROID_APP_BUILD_NUMBER")?.toInt() ?: 1
+        versionName = System.getenv("ANDROID_APP_VERSION_NAME") ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

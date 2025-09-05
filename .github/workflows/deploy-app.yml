@@ -13,7 +13,12 @@ jobs:
       contents: write # If your deploy script that you write needs to push a git commit, git tag, or create a GitHub Release.
       pull-requests: write # If you enable pull request comments (they are enabled by default).
     steps: 
-    - uses: actions/checkout@v3
+    # Checkout the repo and make sure to get all commits for all branches. 
+    # workaround for a decaf bug. fix: https://github.com/levibostian/decaf/pull/88 
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
     - uses: ./.github/actions/setup-android
 
     - name: Create production Android keystore file 

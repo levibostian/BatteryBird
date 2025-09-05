@@ -11,6 +11,8 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
+    jvmToolchain(21)
+
     // Apply the default hierarchy template to create iOS source sets automatically
     applyDefaultHierarchyTemplate()
 
@@ -57,10 +59,6 @@ android {
     compileSdk = 36
     defaultConfig {
         minSdk = 21
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 

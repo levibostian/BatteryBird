@@ -1,27 +1,20 @@
 name: Deploy Release 
 
-on: 
-  push: 
+on:
+  push:
     branches: [main]
+  # This tool encourages you to run it on pull requests to test the deployment process.
+  pull_request:
 
 jobs: 
   make-new-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # allow pushing of a git tag to the repo. 
+      contents: write # If your deploy script that you write needs to push a git commit, git tag, or create a GitHub Release.
+      pull-requests: write # If you enable pull request comments (they are enabled by default).
     steps: 
     - uses: actions/checkout@v3
     - uses: ./.github/actions/setup-android
-
-    - name: Install tools from Gemfile (ruby language) used for building app
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3'
-        bundler-cache: true # cache tools to make builds faster in future 
-
-    - name: Install node tools used to make deployment 
-      run: |
-        npm i -g semantic-release conventional-changelog-conventionalcommits @semantic-release/github @semantic-release/exec
 
     - name: Create production Android keystore file 
       uses: levibostian/action-random-file@main
@@ -37,12 +30,25 @@ jobs:
         base64-file-content: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_B64 }}
         file-name: "service_account.json"
 
-    - name: Create git tag and upload app to app stores 
-      run: semantic-release
+    - name: Install CLI to upload to Play Store
+      run: curl -fsSL https://github.com/levibostian/upload-android-app-to-google-play/blob/HEAD/install?raw=true | bash
+
+    - name: Install Deno to run scripts
+      uses: denoland/setup-deno@v1
+      with:
+        deno-version: v2.x
+
+    - uses: levibostian/decaf@0.2.4
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # required by semantic-release 
+        # required to use 'gh' CLI in my step scripts. 
+        GH_TOKEN: ${{ github.token }}
         GOOGLE_PLAY_SERVICE_ACCOUNT_FILE_PATH: ${{ steps.create-google-play-service-account-file.outputs.path }}
         ANDROID_SIGNING_KEY_FILE_PATH: ${{ steps.create-keystore-file.outputs.path }}
         ANDROID_SIGNING_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
         ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
-    
+      with:
+        simulated_merge_type: 'rebase'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        get_latest_release_current_branch: ./scripts/deployment-get-latest-release.ts
+        get_next_release_version: ./scripts/deployment-get-next-release.ts
+        deploy: ./scripts/deployment-deploy.ts

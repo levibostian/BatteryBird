@@ -52,12 +52,6 @@ android {
         // https://github.com/Kotlin/kotlinx-datetime#using-in-your-projects
         // https://developer.android.com/studio/write/java8-support#library-desugaring
         isCoreLibraryDesugaringEnabled = true
-
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    kotlinOptions {
-        //jvmTarget = "1.8"
     }
     buildFeatures {
         compose = true
@@ -78,6 +72,10 @@ android {
             isIncludeAndroidResources = true // from: https://robolectric.org/getting-started/
         }
     }
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 dependencies {

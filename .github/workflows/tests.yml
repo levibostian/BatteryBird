@@ -8,11 +8,11 @@ jobs:
     permissions:
       checks: write # for junit test results parser 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
     - uses: ./.github/actions/setup-android
     - run: ./gradlew :app:testDebugUnitTest
     - name: Parse junit test results 
-      uses: mikepenz/action-junit-report@v3
+      uses: mikepenz/action-junit-report@150e2f992e4fad1379da2056d1d1c279f520e058 # v3
       if: success() || failure() # always run even if the previous step fails
       with:
         report_paths: 'app/build/test-results/test*/TEST-*.xml'
@@ -24,18 +24,18 @@ jobs:
   sql-migration-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
     - uses: ./.github/actions/setup-android
     - run: ./gradlew :store:verifyCommonMainDatabaseMigration
 
   build-app:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
     - uses: ./.github/actions/setup-android
 
     - name: Create production Android keystore file 
-      uses: levibostian/action-random-file@main
+      uses: levibostian/action-random-file@eda8c89e3b3bb5dea0fdb4d3dc8b11876c74d97c # main
       id: create-keystore-file
       with:
         base64-file-content: ${{ secrets.ANDROID_RELEASE_SIGNING_KEY_FILE_BASE64 }}

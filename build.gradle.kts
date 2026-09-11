@@ -35,7 +35,7 @@ plugins {
 
     // Android Jetpack compose only supports certain versions of Kotlin. We must use hard-coded version to stay compatible with it.
     // Use this chart to see when the version gets increased: https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-    val kotlinVersion = "2.1.0"
+    val kotlinVersion = "2.4.20"
     id("org.jetbrains.kotlin.plugin.compose").version(kotlinVersion).apply(false)
     id("org.jetbrains.kotlin.android").version(kotlinVersion).apply(false)
     kotlin("plugin.serialization").version(kotlinVersion).apply(false)

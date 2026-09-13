@@ -1,17 +1,18 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     kotlin("plugin.serialization")
 }
 
 android {
     namespace = "app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "earth.levi.bluetoothbattery"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 36
         versionCode = System.getenv("ANDROID_APP_BUILD_NUMBER")?.toInt() ?: 1
         versionName = System.getenv("ANDROID_APP_VERSION_NAME") ?: "1.0"
@@ -74,8 +75,19 @@ android {
     }
 }
 
-kotlin {
-    jvmToolchain(21)
+// robolectric needs JVM opens on internal JDK packages (JDK17+): https://robolectric.org/getting-started/
+tasks.withType<Test>().configureEach {
+    jvmArgs(
+        "--add-opens=java.base/java.lang=ALL-UNNAMED",
+        "--add-opens=java.base/java.util=ALL-UNNAMED",
+        "--add-opens=java.base/java.io=ALL-UNNAMED",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "--add-opens=java.base/java.security=ALL-UNNAMED",
+        "--add-opens=java.base/java.text=ALL-UNNAMED",
+        "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
+        "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+    )
 }
 
 dependencies {
@@ -84,6 +96,9 @@ dependencies {
     // Compose
     implementation("androidx.navigation:navigation-compose:+")
     implementation("androidx.compose.material3:material3:+")
+    // compose 1.9+: icons split out of material3 into own artifacts
+    implementation("androidx.compose.material:material-icons-core:+")
+    implementation("androidx.compose.material:material-icons-extended:+") // Icons.Filled.* full set
     implementation("androidx.compose.ui:ui-tooling-preview:+") // Compose: Android Studio Preview support
     debugImplementation("androidx.compose.ui:ui-tooling:+")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:+") // Compose: Optional - Integration with ViewModels

@@ -1,12 +1,20 @@
 plugins {
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
-    id("com.android.library")
+    id("com.android.kotlin.multiplatform.library")
     id("app.cash.sqldelight")
 }
 
 kotlin {
-    androidTarget()
+    android {
+        namespace = "earth.levi.batterybird.store"
+        compileSdk = 36
+        minSdk = 21
+
+        // legacy androidUnitTest -> androidHostTest in AGP9 new DSL. Mirrors app's unit test config.
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
+    }
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -16,49 +24,31 @@ kotlin {
     // Apply the default hierarchy template to create iOS source sets automatically
     applyDefaultHierarchyTemplate()
 
-    cocoapods {
-        summary = "Some description for the Shared Module"
-        homepage = "Link to the Shared Module homepage"
-        version = "1.0"
-        ios.deploymentTarget = "14.1"
-        framework {
-            baseName = "store"
-        }
-    }
-    
     sourceSets {
-        val commonMain by getting {
+        val commonMain = getByName("commonMain") {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:+")
                 implementation("app.cash.sqldelight:coroutines-extensions:+")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:+") // required by sqldelight coroutines-extensions
             }
         }
-        val commonTest by getting {
+        val commonTest = getByName("commonTest") {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
-        val androidMain by getting {
+        val androidMain = getByName("androidMain") {
             dependencies {
                 implementation("app.cash.sqldelight:android-driver:+")
             }
         }
-        val androidUnitTest by getting // there is also androidInstrumentedTest
-        val iosMain by getting {
+        val androidHostTest = getByName("androidHostTest") // there is also androidDeviceTest (instrumented)
+        val iosMain = getByName("iosMain") {
             dependencies {
                 implementation("app.cash.sqldelight:native-driver:+")
             }
         }
-        val iosTest by getting
-    }
-}
-
-android {
-    namespace = "earth.levi.batterybird.store"
-    compileSdk = 36
-    defaultConfig {
-        minSdk = 21
+        val iosTest = getByName("iosTest")
     }
 }
 
@@ -68,7 +58,7 @@ sqldelight {
             packageName.set("earth.levi.batterybird.store")
             // define what version of sqlite to enable some features of sqldelight: https://github.com/cashapp/sqldelight/issues/1436
             // find version of sqlite can use for Android: https://developer.android.com/reference/android/database/sqlite/package-summary
-            // for ios: https://stackoverflow.com/questions/14288128/what-version-of-sqlite-does-ios-provide
+            // for ios: https://stackoverflow.com/questions/14288128/what-version-of-sqlite-does-sqlite-provide
             dialect("app.cash.sqldelight:sqlite-3-24-dialect:+")
             schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
         }

@@ -4,11 +4,11 @@
 # To regenerate this file, run: ./gradlew dependencies --write-locks
 androidx.databinding:databinding-common:9.4.1=classpath
 androidx.databinding:databinding-compiler-common:9.4.1=classpath
-app.cash.sqldelight:app.cash.sqldelight.gradle.plugin:2.4.0-rc1=classpath
-app.cash.sqldelight:core:2.4.0-rc1=classpath
-app.cash.sqldelight:dialect-api:2.4.0-rc1=classpath
-app.cash.sqldelight:gradle-plugin:2.4.0-rc1=classpath
-app.cash.sqldelight:migrations:2.4.0-rc1=classpath
+app.cash.sqldelight:app.cash.sqldelight.gradle.plugin:2.4.0=classpath
+app.cash.sqldelight:core:2.4.0=classpath
+app.cash.sqldelight:dialect-api:2.4.0=classpath
+app.cash.sqldelight:gradle-plugin:2.4.0=classpath
+app.cash.sqldelight:migrations:2.4.0=classpath
 com.android.application:com.android.application.gradle.plugin:9.4.1=classpath
 com.android.databinding:baseLibrary:9.4.1=classpath
 com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin:9.4.0=classpath
@@ -62,8 +62,8 @@ com.google.protobuf:protobuf-java:3.25.5=classpath
 com.googlecode.juniversalchardet:juniversalchardet:1.0.3=classpath
 com.squareup:javapoet:1.13.0=classpath
 com.squareup:javawriter:2.5.0=classpath
-com.squareup:kotlinpoet-jvm:2.3.0=classpath
-com.squareup:kotlinpoet:2.3.0=classpath
+com.squareup:kotlinpoet-jvm:2.4.0=classpath
+com.squareup:kotlinpoet:2.4.0=classpath
 com.sun.istack:istack-commons-runtime:3.0.8=classpath
 com.sun.xml.fastinfoset:FastInfoset:1.2.16=classpath
 commons-codec:commons-codec:1.17.1=classpath

@@ -40,5 +40,5 @@ plugins {
     kotlin("plugin.serialization").version(kotlinVersion).apply(false)
     kotlin("multiplatform").version(kotlinVersion).apply(false)
     id("com.android.kotlin.multiplatform.library").version("9.4.0").apply(false)
-    id("app.cash.sqldelight").version("+").apply(false)
+    id("app.cash.sqldelight").version("2.4.0").apply(false)
 }

@@ -1,23 +1,23 @@
 {
-  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: [
-    'config:best-practices',
-    ':automergeDigest',
-    ':automergeAll',
-    ':automergeRequireAllStatusChecks',
-    ':separateMultipleMajorReleases',
-    ':maintainLockFilesWeekly',
-    'schedule:weekends',
-    ':timezone(America/Chicago)',
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":automergeDigest",
+    ":automergeAll",
+    ":automergeRequireAllStatusChecks",
+    ":separateMultipleMajorReleases",
+    ":maintainLockFilesWeekly",
+    "schedule:weekends",
+    ":timezone(America/Chicago)"
   ],
   // sqldelight's gradle plugin, drivers, dialect and extensions are released as a matched set —
   // bump them together so one PR carries the shared lockfile update and versions can't diverge.
-  packageRules: [
+  "packageRules": [
     {
-      groupName: 'sqldelight',
-      matchPackageNames: [
-        'app.cash.sqldelight{/,}**',
-      ],
-    },
-  ],
+      "groupName": "sqldelight",
+      "matchPackageNames": [
+        "app.cash.sqldelight{/,}**"
+      ]
+    }
+  ]
 }

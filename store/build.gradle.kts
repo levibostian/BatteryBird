@@ -39,7 +39,7 @@ kotlin {
         }
         val androidMain = getByName("androidMain") {
             dependencies {
-                implementation("app.cash.sqldelight:android-driver:2.4.0")
+                implementation("app.cash.sqldelight:android-driver:2.4.1")
             }
         }
         val androidHostTest = getByName("androidHostTest") // there is also androidDeviceTest (instrumented)

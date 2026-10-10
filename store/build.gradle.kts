@@ -28,7 +28,7 @@ kotlin {
         val commonMain = getByName("commonMain") {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat")
-                implementation("app.cash.sqldelight:coroutines-extensions:2.4.0")
+                implementation("app.cash.sqldelight:coroutines-extensions:2.4.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0") // required by sqldelight coroutines-extensions
             }
         }

@@ -45,7 +45,7 @@ kotlin {
         val androidHostTest = getByName("androidHostTest") // there is also androidDeviceTest (instrumented)
         val iosMain = getByName("iosMain") {
             dependencies {
-                implementation("app.cash.sqldelight:native-driver:2.4.0")
+                implementation("app.cash.sqldelight:native-driver:2.4.1")
             }
         }
         val iosTest = getByName("iosTest")

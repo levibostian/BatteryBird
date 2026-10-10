@@ -1,18 +1,4 @@
-// Dependency version locking. Tries to make builds more reliable to be reproducible, and allow automatic upgrades easily.
-// Learn more: https://github.com/peter-evans/gradle-auto-dependency-updates
-// buildscript classpath is intentionally NOT locked: Gradle strictly pins the kotlin-stdlib/reflect versions that match its own embedded Kotlin on the buildscript classpath, so every Gradle version bump makes the committed buildscript-gradle.lockfile stale and breaks ALL builds (CI + Renovate's lockfile update) until a human regenerates it. Leaving the classpath unlocked lets Gradle's own strict constraint win, so dependency-update PRs pass CI without manual lockfile fixes. App/store module lockfiles below keep reproducibility for the actual dependency graph.
-
 allprojects {
-    dependencyLocking {
-        lockAllConfigurations() // enables dependency locking for all modules in the project. Except for buildscript dependencies.
-        // Kotlin artifacts (stdlib, test, compiler, klib tooling, ...) track the Kotlin Gradle
-        // plugin version, so locking them means every Kotlin plugin bump leaves the committed
-        // lockfiles stale and breaks CI until someone regenerates them. The plugin version in
-        // build.gradle.kts already pins this group, so ignore it to keep lockfiles valid across
-        // plugin bumps. See https://docs.gradle.org/current/userguide/dependency_locking.html
-        ignoredDependencies.add("org.jetbrains.kotlin:*")
-    }
-
     configurations.all {
         resolutionStrategy {
             // Filters dependency versions based on criteria.

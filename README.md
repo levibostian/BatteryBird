@@ -59,5 +59,4 @@ Bluetooth devices come with a name that was created by the manufacturer. Sometim
 
 # Update dependencies
 
-- install [task](https://taskfile.dev/docs/installation) 
-- run: `task update-lock-versions`
+Dependency versions are pinned directly in the `build.gradle.kts` files. [Renovate](https://docs.renovatebot.com/) keeps them up to date by opening pull requests.

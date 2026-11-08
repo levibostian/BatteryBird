@@ -126,5 +126,5 @@ dependencies {
     testImplementation("androidx.test:runner:1.7.0")
     testImplementation("androidx.test:rules:1.7.0")
     testImplementation(kotlin("test")) // kotlin test assertions
-    testImplementation("io.mockk:mockk:1.14.11")
+    testImplementation("io.mockk:mockk:1.14.12")
 }

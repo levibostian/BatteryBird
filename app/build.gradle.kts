@@ -95,7 +95,7 @@ dependencies {
 
     // Compose
     implementation("androidx.navigation:navigation-compose:2.10.2")
-    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.compose.material3:material3:1.5.0")
     // compose 1.9+: icons split out of material3 into own artifacts
     implementation("androidx.compose.material:material-icons-core:1.7.8")
     implementation("androidx.compose.material:material-icons-extended:1.7.8") // Icons.Filled.* full set

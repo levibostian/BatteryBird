@@ -101,7 +101,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8") // Icons.Filled.* full set
     implementation("androidx.compose.ui:ui-tooling-preview:1.12.1") // Compose: Android Studio Preview support
     debugImplementation("androidx.compose.ui:ui-tooling:1.12.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0") // Compose: Optional - Integration with ViewModels
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.1") // Compose: Optional - Integration with ViewModels
     implementation("androidx.activity:activity-compose:1.13.0")
     // Compose: UI Tests
     //androidTestImplementation("androidx.compose.ui:ui-test-junit4")
